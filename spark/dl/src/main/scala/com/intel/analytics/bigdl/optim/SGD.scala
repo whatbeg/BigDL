@@ -183,7 +183,7 @@ object SGD {
   /**
    * A learning rate decay policy, where the effective learning rate
    * follows a polynomial decay, to be zero by the max_iteration.
-   * Calculation: base_lr (1 - iter/maxIteration) ^ (power)
+   * Calculation: base_lr (1 - iter/maxIteration) `^` (power)
    *
    * @param power coeffient of decay, refer to calculation formula
    * @param maxIteration max iteration when lr becomes zero
@@ -204,7 +204,7 @@ object SGD {
   }
   /**
    * A learning rate decay policy, where the effective learning rate
-   * is calculated as base_lr * gamma ^ (floor(iter / stepSize))
+   * is calculated as base_lr * gamma `^` (floor(iter / stepSize))
    *
    * @param stepSize the inteval for lr decay
    * @param gamma coefficient of decay, refer to calculation formula
@@ -282,6 +282,41 @@ object SGD {
         i += 1
       }
       config("clr") = clr
+    }
+  }
+
+  /**
+    * [[NaturalExp]] is a learning rate schedule, which rescale the learning rate by
+    * exp ( -decay_rate * iter / decay_step )
+    *
+    * @param decay_step how often to apply decay
+    * @param gamma the decay rate. e.g. 0.96
+    */
+  case class NaturalExp(decay_step : Int, gamma : Double)
+    extends LearningRateSchedule {
+    override def updateHyperParameter(config: Table, state: Table): Unit = {
+      val lr = config.getOrElse("learningRate", 1e-3)
+      val nevals = state.get[Int]("evalCounter").getOrElse(0)
+      val p = nevals / decay_step
+      state("evalCounter") = nevals + 1
+      config("clr") = -lr * math.exp(-gamma * p)
+    }
+  }
+
+  /**
+    * [[SigmoidDecay]] is a learning rate schedule, which rescale the learning rate by
+    * 1 / ( 1 + exp ( -decay_rate * (iter - step_size) )
+    *
+    * @param stepSize step size of sigmoid decay
+    * @param gamma the decay rate
+    */
+  case class SigmoidDecay(stepSize : Int, gamma : Double)
+    extends LearningRateSchedule {
+    override def updateHyperParameter(config: Table, state: Table): Unit = {
+      val lr = config.getOrElse("learningRate", 1e-3)
+      val nevals = state.get[Int]("evalCounter").getOrElse(0)
+      state("evalCounter") = nevals + 1
+      config("clr") = -lr / (1 + math.exp(-gamma * (nevals - stepSize)))
     }
   }
 

@@ -240,4 +240,38 @@ class SGDSpec extends FlatSpec with Matchers {
       -config[Double]("clr") should be(0.1 * Math.pow(0.5, e))
     }
   }
+
+  "Natural Exp" should "generate correct learning rates" in {
+
+    val config = T("learningRate" -> 0.1, "learningRateSchedule" -> NaturalExp(1, 1))
+    val optimMethod = new SGD[Double]
+    def feval(x: Tensor[Double]): (Double, Tensor[Double]) = {
+      (0.1, Tensor[Double](Storage(Array(1.0, 1.0))))
+    }
+    val x = Tensor[Double](Storage(Array(10.0, 10.0)))
+    val state = T("epoch" -> 0, "evalCounter" -> 0)
+    optimMethod.optimize(feval, x, config, state)
+    -config[Double]("clr") should be(0.1)
+    optimMethod.optimize(feval, x, config, state)
+    -config[Double]("clr") should be(0.1 * math.exp(-1))
+    optimMethod.optimize(feval, x, config, state)
+    -config[Double]("clr") should be(0.1 * math.exp(-2))
+  }
+
+  "SigmoidDecay" should "generate correct learning rates" in {
+
+    val config = T("learningRate" -> 0.1, "learningRateSchedule" -> SigmoidDecay(1, 1))
+    val optimMethod = new SGD[Double]
+    def feval(x: Tensor[Double]): (Double, Tensor[Double]) = {
+      (0.1, Tensor[Double](Storage(Array(1.0, 1.0))))
+    }
+    val x = Tensor[Double](Storage(Array(10.0, 10.0)))
+    val state = T()
+    optimMethod.optimize(feval, x, config, state)
+    -config[Double]("clr") should be(0.1 / (1 + math.E) +- 1e-9)
+    optimMethod.optimize(feval, x, config, state)
+    -config[Double]("clr") should be(0.05 +- 1e-9)
+    optimMethod.optimize(feval, x, config, state)
+    -config[Double]("clr") should be(0.1 / (1 + math.exp(-1)) +- 1e-9)
+  }
 }
