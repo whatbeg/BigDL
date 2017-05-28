@@ -42,7 +42,7 @@ CONTINUOUS_COLUMNS = ["age", "education_num", "capital_gain", "capital_loss",
                       "hours_per_week"]
 
 
-def build_models(classNum):
+def build_wide_n_deep_model(classNum):
 
     model = Sequential()
     submodel = Concat(2)
@@ -69,6 +69,21 @@ def build_models(classNum):
     deep_model.add(deep_column).add(Linear(53, 100)).add(ReLU()).add(Linear(100, 50)).add(ReLU())
     submodel.add(deep_model)
     model.add(submodel).add(Linear(57, classNum)).add(LogSoftMax())
+    return model
+
+
+def build_wide_model(classNum):
+
+    model = Sequential()
+    submodel = Concat(2)
+    submodel.add(Sequential().add(Select(2, 1)).add(Reshape([1])))
+    submodel.add(Sequential().add(Select(2, 2)).add(Reshape([1])))
+    submodel.add(Sequential().add(Select(2, 3)).add(Reshape([1])))
+    submodel.add(Sequential().add(Select(2, 4)).add(Reshape([1])))
+    submodel.add(Sequential().add(Select(2, 5)).add(Reshape([1])))
+    submodel.add(Sequential().add(Select(2, 6)).add(Reshape([1])))
+    submodel.add(Sequential().add(Select(2, 7)).add(Reshape([1])))
+    model.add(submodel).add(Linear(7, classNum)).add(LogSoftMax())
     return model
 
 
@@ -105,12 +120,13 @@ if __name__ == "__main__":
     if options.action == "train":
         train_data = get_data_rdd(sc, 'train')
         test_data = get_data_rdd(sc, 'test')
-        state = {"learningRate": 0.01}
+        state = {"learningRate": 0.01,
+                 "learningRateDecay": 0.0001}
         optimizer = Optimizer(
-            model=build_models(2),
+            model=build_wide_n_deep_model(2),
             training_rdd=train_data,
             criterion=ClassNLLCriterion(),
-            optim_method="Adam",
+            optim_method="SGD",
             state=state,
             end_trigger=MaxEpoch(20),
             batch_size=int(options.batchSize))

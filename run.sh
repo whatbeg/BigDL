@@ -31,4 +31,5 @@ spark-submit \
     --action train |& tee LOG/${logname}.log
 
 grep 'DistriOptimizer\$' LOG/${logname}.log > LOG/${logname}_F.log
+grep 'Top1Accuracy' LOG/${logname}_F.log > LOG/${logname}_SIMPLE.log
 
