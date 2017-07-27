@@ -69,6 +69,8 @@ object TensorNumericMath {
 
     def isGreaterEq(x: T, y: T): Boolean
 
+    def isEq(x: T, y: T): Boolean
+
     def rand(): T
 
     def randn(): T
@@ -184,6 +186,8 @@ object TensorNumericMath {
       def isGreater(x: Float, y: Float): Boolean = (x > y)
 
       def isGreaterEq(x: Float, y: Float): Boolean = (x >= y)
+
+      def isEq(x: Float, y: Float): Boolean = (x == y)
 
       def rand(): Float = RNG.uniform(0, 1).toFloat
 
@@ -383,6 +387,8 @@ object TensorNumericMath {
       def isGreater(x: Double, y: Double): Boolean = (x > y)
 
       def isGreaterEq(x: Double, y: Double): Boolean = (x >= y)
+
+      def isEq(x: Double, y: Double): Boolean = (x == y)
 
       def rand(): Double = RNG.uniform(0, 1)
 

@@ -83,8 +83,10 @@ object WideDeepWithSparse {
       case "wide_n_deep" =>
         val parallel = ParallelTable()
         parallel.add(wideModel)
-        parallel.add(deepModel).add(ToSparse())
-        model.add(parallel).add(SparseJoinTable(2, 2))
+        parallel.add(deepModel)
+          // .add(new ToSparse())
+        model.add(parallel)
+          // .add(SparseJoinTable(2, 2))
           .add(SparseLinear(1023263, classNum)).add(LogSoftMax())
       case "wide" =>
         model.add(wideModel).add(Linear(1023213, classNum)).add(LogSoftMax())
