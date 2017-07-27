@@ -16,9 +16,8 @@
 
 package com.intel.analytics.bigdl.nn
 
-import com.intel.analytics.bigdl.nn.abstractnn.TensorModule
 import com.intel.analytics.bigdl.optim.Regularizer
-import com.intel.analytics.bigdl.tensor.{SparseTensorMath, Tensor}
+import com.intel.analytics.bigdl.tensor.{SparseTensorBLAS, SparseTensorMath, Tensor}
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
 
 import scala.reflect.ClassTag
@@ -26,45 +25,55 @@ import scala.reflect.ClassTag
 class SparseLinear[T: ClassTag](
       inputSize: Int,
       outputSize: Int,
-      val withBias: Boolean = true,
-      var wRegularizer: Regularizer[T] = null,
-      var bRegularizer: Regularizer[T] = null,
+      backwardStart: Int = -1,
+      backwardLength: Int = -1,
+      withBias: Boolean = true,
+      wRegularizer: Regularizer[T] = null,
+      bRegularizer: Regularizer[T] = null,
       initWeight: Tensor[T] = null,
       initBias: Tensor[T] = null,
       initGradWeight: Tensor[T] = null,
-      initGradBias: Tensor[T] = null)(implicit ev: TensorNumeric[T]) extends TensorModule[T]{
-  require(outputSize == 1, "outputSize should be 1 only")
-
-  val weight: Tensor[T] = Tensor[T](inputSize)
-  val bias: Tensor[T] = Tensor[T](outputSize)
-  val addBuffer: Tensor[T] = Tensor[T]()
-  val gradWeight = Tensor[T](inputSize)
-  val gradBias = Tensor[T](outputSize)
-  reset()
+      initGradBias: Tensor[T] = null)(implicit ev: TensorNumeric[T]) extends Linear[T](
+  inputSize, outputSize, withBias, wRegularizer, bRegularizer,
+  initWeight, initBias, initGradWeight, initGradBias) {
 
   override def updateOutput(input: Tensor[T]): Tensor[T] = {
-    require(input.dim() == 1 || input.dim() == 2, "input must be vector or matrix")
-    output.resize(Array(input.size(1)))
-    output.fill(bias.valueAt(1))
-    SparseTensorMath.addmv(output, ev.fromType[Int](1), output, ev.fromType[Int](1), input, weight)
+    require(input.dim() == 2,
+      "Linear: " + ErrorInfo.constrainInputAsVectorOrBatch)
+
+    val nFrame = input.size(1)
+    val nElement = output.nElement
+    val t = Array(nFrame, weight.size(1))
+    output.resize(t)
+    if (output.nElement() != nElement) {
+      output.zero()
+    }
+
+    if (addBuffer.nElement() != nFrame) {
+      addBuffer.resize(Array(nFrame)).fill(ev.one)
+    }
+
+    SparseTensorBLAS.coomm(ev.one, input, weight.t, ev.zero, output)
+    if (withBias) output.addr(ev.one, addBuffer, bias)
     output
   }
 
+  // just backward a part of the gradOutput.
   override def updateGradInput(input: Tensor[T], gradOutput: Tensor[T]): Tensor[T] = {
-    // TODO: implement updateGradInput
-    require(input.dim() == 1 || input.dim() == 2,
+    require(input.dim() == 2,
       "Linear: " + ErrorInfo.constrainInputAsVectorOrBatch)
+    if (backwardStart >= 0 && backwardLength > 0) {
+      // TODO: _input to dense
+      val _input = input.narrow(2, backwardStart, backwardLength)
+      val _weight = weight.narrow(2, backwardStart, backwardLength)
 
-    val nElement = gradInput.nElement()
-    gradInput.resizeAs(input)
-    if (nElement != gradInput.nElement()) {
-      gradInput.zero()
-    }
+      val nElement = gradInput.nElement()
+      gradInput.resizeAs(_input)
+      if (nElement != gradInput.nElement()) {
+        gradInput.zero()
+      }
 
-    if (input.dim() == 1) {
-      gradInput.addmv(ev.fromType[Int](0), ev.fromType[Int](1), weight.t(), gradOutput)
-    } else if (input.dim() == 2) {
-      gradInput.addmm(ev.fromType[Int](0), ev.fromType[Int](1), gradOutput, weight)
+      gradInput.addmm(ev.fromType[Int](0), ev.fromType[Int](1), gradOutput, _weight)
     }
     gradInput
   }
@@ -72,18 +81,28 @@ class SparseLinear[T: ClassTag](
   override def accGradParameters(
                                   input: Tensor[T],
                                   gradOutput: Tensor[T]): Unit = {
-    SparseTensorMath.addmv(gradWeight, ev.fromType(0.0), gradWeight,
-      ev.fromType[Double](scaleW), input.t(), gradOutput)
-    gradBias.add(ev.times(ev.fromType[Double](scaleB), gradOutput.sum()))
-  }
+    require(input.dim() == 2,
+      "Linear: " + ErrorInfo.constrainInputAsVectorOrBatch)
 
-  override def zeroGradParameters(): Unit = {
-    gradWeight.zero()
-    gradBias.zero()
-  }
+    gradWeight.resize(outputSize, inputSize)
+    if (withBias) {
+      gradBias.resize(outputSize)
+    }
 
-  override def parameters(): (Array[Tensor[T]], Array[Tensor[T]]) = {
-    (Array(this.weight, this.bias), Array(this.gradWeight, this.gradBias))
+    if (scaleW != 0) {
+      gradWeight.addmm(ev.fromType[Double](scaleW), gradOutput.t, input)
+    }
+
+    if (withBias && scaleB != 0) {
+      gradBias.addmv(ev.fromType[Double](scaleB), gradOutput.t, addBuffer)
+    }
+
+    if (null != wRegularizer && scaleW != 0) {
+      wRegularizer.accRegularization(weight, gradWeight, scaleW)
+    }
+    if (null != bRegularizer && scaleB != 0) {
+      bRegularizer.accRegularization(bias, gradBias, scaleB)
+    }
   }
 
   override def toString() : String = {
@@ -96,6 +115,8 @@ object SparseLinear {
           inputSize: Int,
           outputSize: Int,
           withBias: Boolean = true,
+          backwardStart: Int = -1,
+          backwardLength: Int = -1,
           wRegularizer: Regularizer[T] = null,
           bRegularizer: Regularizer[T] = null,
           initWeight: Tensor[T] = null,
@@ -103,7 +124,7 @@ object SparseLinear {
           initGradWeight: Tensor[T] = null,
           initGradBias: Tensor[T] = null
         )(implicit ev: TensorNumeric[T]): SparseLinear[T] = {
-    new SparseLinear[T](inputSize, outputSize,
+    new SparseLinear[T](inputSize, outputSize, backwardStart, backwardLength,
       withBias, wRegularizer, bRegularizer, initWeight, initBias, initGradWeight, initGradBias)
   }
 }

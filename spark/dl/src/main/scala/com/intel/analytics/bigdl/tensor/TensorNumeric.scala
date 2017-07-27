@@ -75,6 +75,8 @@ object TensorNumericMath {
 
     def isGreaterEq(x: T, y: T): Boolean
 
+    def isEq(x: T, y: T): Boolean
+
     def rand(): T
 
     def randn(): T
@@ -238,6 +240,10 @@ object TensorNumericMath {
     def isGreaterEq(x: T, y: T): Boolean =
       throw new UnsupportedOperationException(typeName +
         " in tensor does not support isGreaterEq operation")
+
+    def isEq(x: T, y: T): Boolean =
+      throw new UnsupportedOperationException(typeName +
+        " in tensor does not support isEq operation")
 
     def rand(): T =
       throw new UnsupportedOperationException(typeName +
@@ -434,6 +440,8 @@ object TensorNumericMath {
       override def isGreaterEq(x: Float, y: Float): Boolean = x >= y
 
       override def rand(): Float = RNG.uniform(0, 1).toFloat
+
+      override def isEq(x: Float, y: Float): Boolean = (x == y)
 
       override def randn(): Float = RNG.normal(0, 1).toFloat
 
@@ -695,6 +703,8 @@ object TensorNumericMath {
       override def isGreater(x: Double, y: Double): Boolean = x > y
 
       override def isGreaterEq(x: Double, y: Double): Boolean = x >= y
+
+      override def isEq(x: Double, y: Double): Boolean = (x == y)
 
       override def rand(): Double = RNG.uniform(0, 1)
 

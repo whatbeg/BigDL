@@ -37,7 +37,7 @@ object SparseTensorMath {
       r.resizeAs(t).copy(t)
     }
 
-    SparseTensorBLAS.coogemv(alpha, mat, vec, beta, r)
+    SparseTensorBLAS.coomv(alpha, mat, vec, beta, r)
     r
   }
 
@@ -56,7 +56,7 @@ object SparseTensorMath {
       res.resizeAs(mat3).copy(mat3)
     }
 
-    SparseTensorBLAS.coogemm(alpha, mat, vec, beta, r)
-    r
+    SparseTensorBLAS.coomm(alpha, mat1, mat2, beta, res)
+    res
   }
 }

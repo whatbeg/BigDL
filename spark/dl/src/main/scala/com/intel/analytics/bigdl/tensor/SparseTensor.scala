@@ -23,10 +23,12 @@ import org.apache.spark.mllib.linalg.{Matrix, Vector}
 
 import scala.reflect.ClassTag
 
-private[Tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
-     private[Tensor] var _indices : Array[Array[Int]],
-     private[Tensor] var _values : Storage[T],
-     private[Tensor] var _shape : Array[Int]
+// indices is zero based.
+private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
+     private[tensor] var _indices : Array[Array[Int]],
+     private[tensor] var _values : Storage[T],
+     private[tensor] var _shape : Array[Int],
+     var nDimension: Int
     )(implicit ev: TensorNumeric[T]) extends Tensor[T] {
 
   // indices order, count from 0
@@ -36,7 +38,7 @@ private[Tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
 
   require(_values.length == _indices(0).length, s"indices' size doesn't match tensor values")
 
-  var nDimension = _shape.length
+  nDimension = _shape.length
 
   /**
    * A shortcut of nDimension()
@@ -106,7 +108,7 @@ private[Tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return size
    */
   override def size(dim: Int): Int = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    _shape(dim - 1)
   }
 
   /**
@@ -454,7 +456,7 @@ private[Tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return storage
    */
   override def storage(): Storage[T] = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    _values
   }
 
   /**
@@ -510,7 +512,17 @@ private[Tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return
    */
   override def narrow(dim: Int, index: Int, size: Int): Tensor[T] = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    require(dim <= nDimension && dim > 1)
+    var i = 0
+    val indices = _indices(dim - 1)
+
+    val nums = indices.filter(i => i >= index && i < index + size).length
+    val newIndices = _shape.map(new Array[Int](nums))
+    val newStorage = Storage(nums)
+    while (i < storage().array().length) {
+      indices
+      i += 1
+    }
   }
 
   /**
@@ -1616,4 +1628,8 @@ override def exp(): Tensor[T] = {
   override def toTensor[D](implicit ev: TensorNumeric[D]): Tensor[D] = {
     throw new UnsupportedOperationException(s"Unimplemented")
   }
+}
+
+object SparseTensor{
+
 }
