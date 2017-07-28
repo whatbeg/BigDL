@@ -16,17 +16,20 @@
 
 package com.intel.analytics.bigdl.nn
 
-import com.intel.analytics.bigdl.nn.abstractnn.TensorCriterion
+import com.intel.analytics.bigdl.nn.abstractnn.{TensorCriterion, TensorModule}
 import com.intel.analytics.bigdl.tensor.Tensor
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
 
 import scala.reflect.ClassTag
 
-class ToSparse[T: ClassTag](implicit ev: TensorNumeric[T]) extends TensorCriterion[T] {
-
-
-
-  override def updateGradInput(input: Tensor[T], target: Tensor[T]): Tensor[T] = {
-    gradInput
+class ToSparse[T: ClassTag](implicit ev: TensorNumeric[T]) extends TensorModule[T] {
+  override def updateOutput(input: Tensor[T]): Tensor[T] = {
+    output = Tensor.sparse(input)
+    output
+  }
+  override def updateGradInput(input: Tensor[T], gradOutput: Tensor[T]): Tensor[T] = {
+    this.gradInput.resizeAs(input)
+    Tensor.dense(gradOutput, gradInput)
+    this.gradInput
   }
 }

@@ -753,6 +753,8 @@ trait Tensor[T] extends Serializable with TensorMath[T] with Activity {
     })
     return result
   }
+
+   def concat(dim: Int, tensors: Seq[Tensor[T]], res: Tensor[T] = null): Tensor[T]
 }
 
 /**
@@ -1094,49 +1096,38 @@ object Tensor {
     DenseTensor.gaussian1D[T](size, sigma, amplitude, normalize, mean, tensor)
   }
 
-  def toSparse[T: ClassTag](
-      denseTensor: Tensor[T])(implicit ev: TensorNumeric[T]): Tensor[T] = {
-    var nonZeroElement = 0
-    denseTensor.apply1{v =>
-      if (v != ev.zero) nonZeroElement += 1
-      v
-    }
-    val shape = denseTensor.size()
-    val indices = shape.map(_ => new Array[Int](nonZeroElement))
-    val storage = Storage[T](nonZeroElement)
-    val storageArray = storage.array()
-    denseTensor.dim() match {
-      case 1 =>
-        var sparseIndex = 0
-        var i = 0
-        while (i < denseTensor.nElement()) {
-          if (denseTensor.valueAt(i) != 0) {
-            indices(0)(sparseIndex) = i
-            storageArray(sparseIndex) = denseTensor.valueAt(i)
-            sparseIndex += 1
-          }
-          i += 1
-        }
-      case 2 =>
-        var sparseIndex = 0
-        var i = 1
-        while (i <= denseTensor.size(1)) {
-          var j = 1
-          while (j <= denseTensor.size(2)) {
-            if (denseTensor.valueAt(i, j) != 0) {
-              indices(0)(sparseIndex) = i - 1
-              indices(1)(sparseIndex) = j - 1
-              storageArray(sparseIndex) = denseTensor.valueAt(i, j)
-              sparseIndex += 1
-            }
-            j += 1
-          }
-          i += 1
-        }
-      case _ =>
-        throw new UnsupportedOperationException()
-    }
-    new SparseTensor(indices, storage, shape, shape.length)
+  def sparse[T: ClassTag](
+        indices : Array[Array[Int]],
+        values : Storage[T],
+        shape : Array[Int])(
+        implicit ev: TensorNumeric[T]): Tensor[T] = {
+    SparseTensor(indices, values, shape, shape.length)
+  }
 
+  def sparse[T: ClassTag](
+        indices : Array[Array[Int]],
+        values : Storage[T],
+        shape : Array[Int],
+        dimension: Int)(
+        implicit ev: TensorNumeric[T]): Tensor[T] = {
+    SparseTensor(indices, values, shape, dimension)
+  }
+
+  def sparse[T: ClassTag](
+        denseTensor: Tensor[T])(implicit ev: TensorNumeric[T]): Tensor[T] = {
+    SparseTensor(denseTensor)
+  }
+
+  def sparse[T: ClassTag](
+        shape : Array[Int],
+        nElement: Int = 1)(
+        implicit ev: TensorNumeric[T]): Tensor[T] = {
+    SparseTensor(shape, nElement)
+  }
+
+  def dense[T: ClassTag](
+        sparseTensor: Tensor[T],
+        res: Tensor[T] = null)(implicit ev: TensorNumeric[T]): Tensor[T] = {
+    DenseTensor(sparseTensor, res)
   }
 }

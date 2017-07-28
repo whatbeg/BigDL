@@ -64,7 +64,7 @@ class SparseLinear[T: ClassTag](
       "Linear: " + ErrorInfo.constrainInputAsVectorOrBatch)
     if (backwardStart >= 0 && backwardLength > 0) {
       // TODO: _input to dense
-      val _input = input.narrow(2, backwardStart, backwardLength)
+      val _input = Tensor.dense(input.narrow(2, backwardStart, backwardLength))
       val _weight = weight.narrow(2, backwardStart, backwardLength)
 
       val nElement = gradInput.nElement()
@@ -90,7 +90,8 @@ class SparseLinear[T: ClassTag](
     }
 
     if (scaleW != 0) {
-      gradWeight.addmm(ev.fromType[Double](scaleW), gradOutput.t, input)
+      SparseTensorMath.addmm(gradWeight, ev.one, gradWeight,
+        ev.fromType[Double](scaleW), gradOutput.t, input)
     }
 
     if (withBias && scaleB != 0) {

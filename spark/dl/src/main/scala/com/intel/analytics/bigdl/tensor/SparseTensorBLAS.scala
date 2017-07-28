@@ -104,20 +104,19 @@ object SparseTensorBLAS {
   }
 
   def coomm[T: ClassTag](
-                            alpha: T,
-                            mat1: Tensor[T],
-                            mat2: Tensor[T],
-                            beta: T,
-                            r: Tensor[T])(implicit ev: TensorNumeric[T]): Unit = {
-    require(mat1.isInstanceOf[SparseTensor[T]])
-    require(mat2.isInstanceOf[DenseTensor[T]])
-    require(r.isInstanceOf[DenseTensor[T]])
-
+        alpha: T,
+        mat1: Tensor[T],
+        mat2: Tensor[T],
+        beta: T,
+        r: Tensor[T])(implicit ev: TensorNumeric[T]): Unit = {
     (alpha, mat1, mat2, beta, r)  match {
 //      case (alpha: Double, a: SparseTensor[Double], x: DenseTensor[Double],
 //      beta: Double, y: DenseTensor[Double]) =>
 //        coodgemm(alpha, a, x, beta, y)
       case (alpha: Float, a: SparseTensor[Float], x: DenseTensor[Float],
+      beta: Float, y: DenseTensor[Float]) =>
+        coosmm(alpha, a, x, beta, y)
+      case (alpha: Float, a: DenseTensor[Float], x: SparseTensor[Float],
       beta: Float, y: DenseTensor[Float]) =>
         coosmm(alpha, a, x, beta, y)
       case _ =>
@@ -131,16 +130,6 @@ object SparseTensorBLAS {
         B: DenseTensor[Float],
         beta: Float,
         C: DenseTensor[Float]): Unit = {
-//    val xValues = x.storage().array()
-//    val yValues = y.storage().array()
-//    val mA: Int = A._shape(0)
-//    val nA: Int = A._shape(1)
-//    val k: Int = x.size(2)
-//
-//    val Avals = A._values.array()
-//    val Arows = A._indices(A.indices_order(0))
-//    val Acols = A._indices(A.indices_order(1))
-
     val mA: Int = A._shape(0)
     val nB: Int = B.size(2)
     val kA: Int = A._shape(1)
@@ -178,6 +167,57 @@ object SparseTensorBLAS {
         var n = 0
         while (n < nB) {
           Cvals(curMA * nB + n) += Avals(index) * Bvals(curKA + n * kB)
+          n += 1
+        }
+        index += 1
+      }
+
+    }
+  }
+
+  private def coosmm(
+        alpha: Float,
+        A: DenseTensor[Float],
+        B: SparseTensor[Float],
+        beta: Float,
+        C: DenseTensor[Float]): Unit = {
+    val kB: Int = B.size(1)
+    val nB: Int = B.size(2)
+    val mA: Int = A.size(1)
+    val kA: Int = A.size(2)
+    println(A)
+
+    val Bvals = B._values.array()
+    val Avals = A.storage().array()
+    val Cvals = C.storage().array()
+    val BrowIndices = B._indices(B.indices_order(0))
+    val BcolIndices = B._indices(B.indices_order(1))
+
+    // Scale matrix first if `beta` is not equal to 0.0
+    if (beta != 0.0) {
+      MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
+    }
+    // Perform matrix multiplication and add to C. The rows of B are multiplied by the columns of
+    // A, and added to C.
+    var index = 0
+    if (A.stride(2) == 1 && A.size(2) == A.stride(1)) {
+      while (index < Bvals.length) {
+        val curMB = BrowIndices(index)
+        val curKB = BcolIndices(index)
+        var n = 0
+        while (n < mA) {
+          Cvals(curMB * mA + n) += Bvals(index) * Avals(curKB * mA + n)
+          n += 1
+        }
+        index += 1
+      }
+    } else {
+      while (index < Bvals.length) {
+        val curKB = BrowIndices(index)
+        val curNB = BcolIndices(index)
+        var n = 0
+        while (n < mA) {
+          Cvals(n * nB + curNB) += Bvals(index) * Avals(n + curKB * mA)
           n += 1
         }
         index += 1
