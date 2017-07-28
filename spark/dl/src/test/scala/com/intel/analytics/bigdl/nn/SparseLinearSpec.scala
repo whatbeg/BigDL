@@ -18,7 +18,7 @@ package com.intel.analytics.bigdl.nn
 
 import org.scalatest.{FlatSpec, Matchers}
 import com.intel.analytics.bigdl.numeric.NumericFloat
-import com.intel.analytics.bigdl.tensor.Tensor
+import com.intel.analytics.bigdl.tensor.{SparseTensor, Tensor}
 
 class SparseLinearSpec extends FlatSpec with Matchers {
   "Sparse Linear" should "return the same result with Linear" in {
@@ -34,9 +34,9 @@ class SparseLinearSpec extends FlatSpec with Matchers {
     val input = Tensor(2, 4)
     input.setValue(1, 1, 1f)
     input.setValue(2, 3, 3f)
-    val sparseInput = Tensor.toSparse(input)
+    val sparseInput = Tensor.sparse(input)
     val out1 = sl.forward(sparseInput)
-    sl.backward(input, gradOutput)
+    sl.backward(sparseInput, gradOutput)
     val out2 = l.forward(input)
     l.backward(input, gradOutput)
     out1 should be (out2)
@@ -50,9 +50,9 @@ class SparseLinearSpec extends FlatSpec with Matchers {
     val l = Linear(4, 2)
     l.weight.copy(sl.weight)
     l.bias.copy(sl.bias)
-    val sparseInput = Tensor.toSparse(input)
+    val sparseInput = Tensor.sparse(input)
     val out1 = sl.forward(sparseInput)
-    sl.backward(input, gradOutput)
+    sl.backward(sparseInput, gradOutput)
     val out2 = l.forward(input)
     l.backward(input, gradOutput)
     out1 should be (out2)
@@ -63,11 +63,28 @@ class SparseLinearSpec extends FlatSpec with Matchers {
   "Sparse Linear" should "return the same result with Linear 3" in {
     val gradOutput = Tensor(2, 2).rand()
     val input = Tensor(2, 4).rand()
-    val sl = SparseLinear(4, 2, backwardStart = 0, backwardLength = 4)
+    val sl = SparseLinear(4, 2, backwardStart = 1, backwardLength = 4)
     val l = Linear(4, 2)
     l.weight.copy(sl.weight)
     l.bias.copy(sl.bias)
-    val sparseInput = Tensor.toSparse(input)
+    val sparseInput = Tensor.sparse(input)
+    val out1 = sl.forward(sparseInput)
+    val gradInput1 = sl.backward(sparseInput, gradOutput)
+    val out2 = l.forward(input)
+    val gradInput2 = l.backward(input, gradOutput)
+    out1 should be (out2)
+    gradInput1 should be (gradInput2)
+    sl.getParameters()._2 should be (l.getParameters()._2)
+  }
+
+  "Sparse Linear" should "return the same result with Linear 4" in {
+    val gradOutput = Tensor(3, 2).rand()
+    val input = Tensor(3, 4).rand()
+    val sl = SparseLinear(4, 2, backwardStart = 1, backwardLength = 4)
+    val l = Linear(4, 2)
+    l.weight.copy(sl.weight)
+    l.bias.copy(sl.bias)
+    val sparseInput = Tensor.sparse(input)
     val out1 = sl.forward(sparseInput)
     val gradInput1 = sl.backward(sparseInput, gradOutput)
     val out2 = l.forward(input)

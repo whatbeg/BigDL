@@ -1908,6 +1908,12 @@ private[tensor] class DenseTensor[@specialized(Float, Double) T: ClassTag](
   }
 
   override def getTensorNumeric(): TensorNumeric[T] = ev
+
+  override def concat(
+      dim: Int,
+      tensors: Seq[Tensor[T]], res: Tensor[T] = null): Tensor[T] = {
+    throw new UnsupportedOperationException("Unimpleneted")
+  }
 }
 
 object DenseTensor {
@@ -2339,5 +2345,28 @@ object DenseTensor {
       gauss.div(gauss.sum())
     }
     gauss
+  }
+
+  def apply[T: ClassTag](
+        sparseTensor: Tensor[T],
+        res: Tensor[T] = null)(implicit ev: TensorNumeric[T]): Tensor[T] = {
+    if (sparseTensor.isInstanceOf[SparseTensor[T]]) {
+      val st = sparseTensor.asInstanceOf[SparseTensor[T]]
+      val dt = if (null == res) Tensor(st.size()) else res
+      var i = 0
+      val index = new Array[Int](dt.dim())
+      while (i < st._indices(0).length) {
+        var j = 0
+        while (j < index.length) {
+          index(j) = st._indices(j)(i) + 1
+          j += 1
+        }
+        dt(index) = st(index)
+        i += 1
+      }
+      dt
+    } else {
+      sparseTensor
+    }
   }
 }

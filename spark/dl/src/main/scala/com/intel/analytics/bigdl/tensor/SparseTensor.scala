@@ -25,8 +25,10 @@ import scala.reflect.ClassTag
 
 // indices is zero based.
 private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
-     private[tensor] var _indices : Array[Array[Int]],
+     private[tensor] var _indices : Array[Storage[Int]],
      private[tensor] var _values : Storage[T],
+     private[tensor] var _storageOffset: Int,
+     private[tensor] var _nElement: Int,
      private[tensor] var _shape : Array[Int],
      var nDimension: Int
     )(implicit ev: TensorNumeric[T]) extends Tensor[T] {
@@ -88,7 +90,7 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    *
    * @return element number
    */
-  override def nElement(): Int = _values.length
+  override def nElement(): Int = _nElement
 
   /**
    * Size of tensor. Return an array of which each value represent the size on the
@@ -98,7 +100,7 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return size array
    */
   override def size(): Array[Int] = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    _shape.slice(0, this.nDimension)
   }
 
   /**
@@ -239,7 +241,14 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return the value on the given index
    */
   override def apply(indexes: Array[Int]): T = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    require(indexes.length == dim())
+    var index = 0
+    var i = 0
+    while (i < dim()) {
+      index = _indices(i).array().indexOf(indexes(i) - 1, index)
+      i += 1
+    }
+    storage().array()(index)
   }
 
   /**
@@ -465,7 +474,7 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return storage offset, count from 1
    */
   override def storageOffset(): Int = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    _storageOffset + 1
   }
 
   /**
@@ -513,16 +522,31 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    */
   override def narrow(dim: Int, index: Int, size: Int): Tensor[T] = {
     require(dim <= nDimension && dim > 1)
-    var i = 0
-    val indices = _indices(dim - 1)
+    val _index = index - 1
+    val dimIndices = _indices(dim - 1)
+    val values = storage().array()
 
-    val nums = indices.filter(i => i >= index && i < index + size).length
-    val newIndices = _shape.map(new Array[Int](nums))
-    val newStorage = Storage(nums)
+    val nums = dimIndices.count(i => i >= _index && i < _index + size)
+    val newShape = this.size()
+    newShape(dim - 1) = size
+    val newIndices = newShape.map(_ => new Array[Int](nums))
+    val newStorage = Storage[T](nums)
+    val newStorageArray = newStorage.array()
+    var i = 0
+    var count = 0
     while (i < storage().array().length) {
-      indices
+      if (dimIndices(i) >= _index && dimIndices(i) < (_index + size)) {
+        newStorageArray(count) = values(i)
+        var dims = 0
+        while (dims < this.dim()) {
+          newIndices(dims)(count) = _indices(dims)(i)
+          dims += 1
+        }
+        count += 1
+      }
       i += 1
     }
+    SparseTensor(newIndices, newStorage, newShape, newShape.length)
   }
 
   /**
@@ -746,6 +770,92 @@ override def save(path: String, overWrite: Boolean): SparseTensor.this.type = {
 override def getTensorNumeric(): TensorNumeric[T] = {
     throw new UnsupportedOperationException(s"Unimplemented")
   }
+
+  def resize(size: Array[Int], nElement: Int): Tensor[T] = {
+    if (this.nElement() < nElement) {
+      storage.resize(nElement)
+      if (size.length == _indices.length) {
+        _indices.foreach(_.resize(nElement))
+      } else if (size.length < _indices.length) {
+        _indices = _indices.slice(0, size.length)
+        _indices.foreach(_.resize(nElement))
+      } else {
+        _indices ++= new Array[Storage[Int]](size.length - _indices.length)
+        _indices.foreach(_.resize(nElement))
+      }
+      _storageOffset = 0
+    }
+    _nElement = nElement
+    _shape = size
+    nDimension = size.length
+
+    this
+  }
+
+  override def concat(
+      dim: Int,
+      tensors: Seq[Tensor[T]],
+      res: Tensor[T] = null): Tensor[T] = {
+    require(dim == 2)
+    val size = tensors.head.size()
+    require(size.length == 2)
+    tensors.foreach{tensor =>
+      // todo: check size
+      require(tensor.isInstanceOf[SparseTensor[T]])
+      require(tensor.dim() == size.length)
+    }
+    var i = 1
+    while (i < tensors.length) {
+      size(dim - 1) += tensors(i).size(dim)
+      i += 1
+    }
+    val totalLength = tensors.map(_.nElement()).sum
+
+    val result = if (null == res) {
+      SparseTensor(size, totalLength)
+    } else {
+      res.asInstanceOf[SparseTensor[T]]
+    }
+    concat(dim, tensors.map(_.asInstanceOf[SparseTensor[T]]), result)
+  }
+
+  private def concat(
+      dim: Int,
+      tensors: Seq[SparseTensor[T]],
+      res: SparseTensor[T]): Tensor[T] = {
+    var start = res._storageOffset
+    var end = res._storageOffset
+    val numOfIndices = res.dim()
+    val tensorsOffset = tensors.map(_.storageOffset() - 1).toArray
+    var j = 0
+    while (j < size(1)) {
+      var index = 0
+      while (index < tensors.size) {
+        val findIndex = tensors(index)._indices(0).array().indexOf(j + 1, tensorsOffset(index))
+        val curLength = if (findIndex != -1) {
+          findIndex - tensorsOffset(index)
+        } else {
+          tensors(index).nElement() + tensors(index).storageOffset() - tensorsOffset(index) - 1
+        }
+        end += curLength
+        ev.arraycopy(tensors(index).storage().array(), tensorsOffset(index),
+          res.storage().array(), start, curLength)
+        var indicesIndex = 0
+        while (indicesIndex < numOfIndices) {
+          System.arraycopy(tensors(index)._indices(indicesIndex).array(), tensorsOffset(index),
+            res._indices(indicesIndex).array(), start, curLength)
+          indicesIndex += 1
+        }
+        tensorsOffset(index) += curLength
+        start = end
+        index += 1
+      }
+      j += 1
+    }
+
+    res
+  }
+
 
   // scalastyle:off methodName
   /**
@@ -1631,5 +1741,79 @@ override def exp(): Tensor[T] = {
 }
 
 object SparseTensor{
+  def apply[T: ClassTag](
+        shape : Array[Int],
+        nElement: Int = 1)(
+        implicit ev: TensorNumeric[T]): SparseTensor[T] = {
+    new SparseTensor(shape.map(_ => Storage[Int](nElement)), Storage(nElement),
+      0, nElement,
+      shape, shape.length)
+  }
+
+  def apply[T: ClassTag](
+      indices : Array[Array[Int]],
+      values : Storage[T],
+      shape : Array[Int])(
+      implicit ev: TensorNumeric[T]): SparseTensor[T] = {
+    new SparseTensor(indices.map(Storage(_)), values,
+      0, values.length(),
+      shape, shape.length)
+  }
+
+  def apply[T: ClassTag](
+      indices : Array[Array[Int]],
+      values : Storage[T],
+      shape : Array[Int],
+      dimension: Int)(
+    implicit ev: TensorNumeric[T]): SparseTensor[T] = {
+    new SparseTensor(indices.map(Storage(_)), values,
+      0, values.length(),
+      shape, dimension)
+  }
+
+  def apply[T: ClassTag](
+      denseTensor: Tensor[T])(implicit ev: TensorNumeric[T]): SparseTensor[T] = {
+    var nonZeroElement = 0
+    denseTensor.apply1{v =>
+      if (v != ev.zero) nonZeroElement += 1
+      v
+    }
+    val shape = denseTensor.size()
+    val indices = shape.map(_ => new Array[Int](nonZeroElement))
+    val storage = Storage[T](nonZeroElement)
+    val storageArray = storage.array()
+    denseTensor.dim() match {
+      case 1 =>
+        var sparseIndex = 0
+        var i = 0
+        while (i < denseTensor.nElement()) {
+          if (denseTensor.valueAt(i) != 0) {
+            indices(0)(sparseIndex) = i
+            storageArray(sparseIndex) = denseTensor.valueAt(i)
+            sparseIndex += 1
+          }
+          i += 1
+        }
+      case 2 =>
+        var sparseIndex = 0
+        var i = 1
+        while (i <= denseTensor.size(1)) {
+          var j = 1
+          while (j <= denseTensor.size(2)) {
+            if (denseTensor.valueAt(i, j) != 0) {
+              indices(0)(sparseIndex) = i - 1
+              indices(1)(sparseIndex) = j - 1
+              storageArray(sparseIndex) = denseTensor.valueAt(i, j)
+              sparseIndex += 1
+            }
+            j += 1
+          }
+          i += 1
+        }
+      case _ =>
+        throw new UnsupportedOperationException(s"${denseTensor.dim()}")
+    }
+    SparseTensor(indices, storage, shape, shape.length)
+  }
 
 }
