@@ -386,6 +386,10 @@ trait Tensor[T] extends Serializable with TensorMath[T] with Activity {
 
   def resize(size1: Int, size2: Int, size3: Int, size4: Int, size5: Int): Tensor[T]
 
+  def resize(sizes: Array[Int], nElement: Int): Tensor[T] = {
+    throw new UnsupportedOperationException("resize with nElement for sparse tensor only")
+  }
+
   //  def repeatTensor(result: Tensor, tensor: Tensor, size: Int*)
 
   /**
@@ -754,7 +758,18 @@ trait Tensor[T] extends Serializable with TensorMath[T] with Activity {
     return result
   }
 
-   def concat(dim: Int, tensors: Seq[Tensor[T]], res: Tensor[T] = null): Tensor[T]
+   def concat(dim: Int, tensors: Seq[Tensor[T]], res: Tensor[T]): Tensor[T]
+
+  def concat(dim: Int, tensors: Table, res: Tensor[T]): Tensor[T] = {
+    val seqTensors = new Array[Tensor[T]](tensors.length())
+    var i = 0
+    while (i < seqTensors.length) {
+      seqTensors(i) = tensors[Tensor[T]](i + 1)
+      i += 1
+    }
+    concat(dim, seqTensors, res)
+  }
+
 }
 
 /**
@@ -1122,6 +1137,7 @@ object Tensor {
         shape : Array[Int],
         nElement: Int = 1)(
         implicit ev: TensorNumeric[T]): Tensor[T] = {
+    require(nElement <= shape.product)
     SparseTensor(shape, nElement)
   }
 

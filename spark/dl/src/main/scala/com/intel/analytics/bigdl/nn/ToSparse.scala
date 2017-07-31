@@ -33,3 +33,10 @@ class ToSparse[T: ClassTag](implicit ev: TensorNumeric[T]) extends TensorModule[
     this.gradInput
   }
 }
+
+object ToSparse {
+  def apply[@specialized(Float, Double) T: ClassTag]()
+        (implicit ev: TensorNumeric[T]) : ToSparse[T] = {
+    new ToSparse()
+  }
+}
