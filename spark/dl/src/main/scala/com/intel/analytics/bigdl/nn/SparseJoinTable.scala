@@ -27,8 +27,11 @@ class SparseJoinTable[T: ClassTag] (
     val dimension: Int)(implicit ev: TensorNumeric[T])
     extends AbstractModule[Table, Tensor[T], T] {
 
+  output = Tensor.sparse(Array(1, 1), 1)
+
   override def updateOutput(input: Table): Tensor[T] = {
     var size: Array[Int] = null
+    var nElements = 0
 
     var i = 1
     while (i <= input.length()) {
@@ -38,19 +41,12 @@ class SparseJoinTable[T: ClassTag] (
       } else {
         size(dimension - 1) += currentOutput.size(dimension)
       }
+      nElements += currentOutput.nElement()
       i += 1
     }
-    output.resize(size)
+    output.resize(size, nElements)
 
-    var offset = 1
-    i = 1
-    while (i <= input.length()) {
-      val currentOutput: Tensor[T] = input(i)
-      output.narrow(dimension, offset, currentOutput.size(dimension))
-        .copy(currentOutput)
-      offset += currentOutput.size(dimension)
-      i += 1
-    }
+    output.concat(2, input, output)
 
     output
   }
@@ -64,4 +60,11 @@ class SparseJoinTable[T: ClassTag] (
     gradInput
   }
 
+}
+
+object SparseJoinTable {
+  def apply[@specialized(Float, Double) T: ClassTag](
+        dimension: Int)(implicit ev: TensorNumeric[T]) : SparseJoinTable[T] = {
+    new SparseJoinTable[T](dimension)
+  }
 }

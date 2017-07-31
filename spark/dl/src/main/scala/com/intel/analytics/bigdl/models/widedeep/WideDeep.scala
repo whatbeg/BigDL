@@ -31,27 +31,34 @@ object WideDeep {
     val deepModel = Sequential()
     val deepColumn = Concat(2)
       // workclass 100
-    deepColumn.add(Sequential().add(Select(2, 1023214)).add(LookupTable(100, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 1023214)).add(LookupTable(100, 8, 0.0)
+      .setName("embedding_1")))
       // education 1000
-    deepColumn.add(Sequential().add(Select(2, 1023215)).add(LookupTable(1000, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 1023215)).add(LookupTable(1000, 8, 0.0)
+      .setName("embedding_2")))
        // gender 2
-    deepColumn.add(Sequential().add(Select(2, 1023216)).add(LookupTable(2, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 1023216)).add(LookupTable(2, 8, 0.0)
+      .setName("embedding_3")))
        // relationship 100
-    deepColumn.add(Sequential().add(Select(2, 1023217)).add(LookupTable(100, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 1023217)).add(LookupTable(100, 8, 0.0)
+      .setName("embedding_4")))
       // native_country 1000
-    deepColumn.add(Sequential().add(Select(2, 1023218)).add(LookupTable(1000, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 1023218)).add(LookupTable(1000, 8, 0.0)
+      .setName("embedding_5")))
       // occupation 1000
-    deepColumn.add(Sequential().add(Select(2, 1023219)).add(LookupTable(1000, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 1023219)).add(LookupTable(1000, 8, 0.0)
+      .setName("embedding_6")))
     deepColumn.add(Sequential().add(Narrow(2, 1023220, 5)).add(Reshape(Array(5))))
-    deepModel.add(deepColumn).add(Linear(53, 100)).add(ReLU()).add(Linear(100, 50)).add(ReLU())
+    deepModel.add(deepColumn).add(Linear(53, 100).setName("fc_1"))
+      .add(ReLU()).add(Linear(100, 50)).add(ReLU())
     modelType match {
       case "wide_n_deep" =>
         wideModel.add(deepModel)
-        model.add(wideModel).add(Linear(1023263, classNum)).add(LogSoftMax())
+        model.add(wideModel).add(Linear(1023263, classNum).setName("fc_2")).add(LogSoftMax())
       case "wide" =>
-        model.add(wideModel).add(Linear(1023213, classNum)).add(LogSoftMax())
+        model.add(wideModel).add(Linear(1023213, classNum).setName("fc_2")).add(LogSoftMax())
       case "deep" =>
-        model.add(deepModel).add(Linear(50, classNum)).add(LogSoftMax())
+        model.add(deepModel).add(Linear(50, classNum).setName("fc_2")).add(LogSoftMax())
       case _ =>
         throw new IllegalArgumentException("unknown type")
     }
@@ -66,31 +73,37 @@ object WideDeepWithSparse {
     val deepModel = Sequential()
     val deepColumn = Concat(2)
     // workclass 100
-    deepColumn.add(Sequential().add(Select(2, 1023214)).add(LookupTable(100, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 1)).add(LookupTable(100, 8, 0.0)
+      .setName("embedding_1")))
     // education 1000
-    deepColumn.add(Sequential().add(Select(2, 1023215)).add(LookupTable(1000, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 2)).add(LookupTable(1000, 8, 0.0)
+      .setName("embedding_2")))
     // gender 2
-    deepColumn.add(Sequential().add(Select(2, 1023216)).add(LookupTable(2, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 3)).add(LookupTable(2, 8, 0.0)
+      .setName("embedding_3")))
     // relationship 100
-    deepColumn.add(Sequential().add(Select(2, 1023217)).add(LookupTable(100, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 4)).add(LookupTable(100, 8, 0.0)
+      .setName("embedding_4")))
     // native_country 1000
-    deepColumn.add(Sequential().add(Select(2, 1023218)).add(LookupTable(1000, 8, 0.0)))
+    deepColumn.add(Sequential().add(Select(2, 5)).add(LookupTable(1000, 8, 0.0)
+      .setName("embedding_5")))
     // occupation 1000
-    deepColumn.add(Sequential().add(Select(2, 1023219)).add(LookupTable(1000, 8, 0.0)))
-    deepColumn.add(Sequential().add(Narrow(2, 1023220, 5)).add(Reshape(Array(5))))
-    deepModel.add(deepColumn).add(Linear(53, 100)).add(ReLU()).add(Linear(100, 50)).add(ReLU())
+    deepColumn.add(Sequential().add(Select(2, 6)).add(LookupTable(1000, 8, 0.0)
+      .setName("embedding_6")))
+    deepColumn.add(Sequential().add(Narrow(2, 7, 5)).add(Reshape(Array(5))))
+    deepModel.add(deepColumn).add(Linear(53, 100).setName("fc_1"))
+      .add(ReLU()).add(Linear(100, 50)).add(ReLU())
     modelType match {
       case "wide_n_deep" =>
         val parallel = ParallelTable()
         parallel.add(wideModel)
-        parallel.add(deepModel.add(new ToSparse()))
-        model.add(parallel)
-          // .add(SparseJoinTable(2, 2))
-          .add(SparseLinear(1023263, classNum)).add(LogSoftMax())
+        parallel.add(deepModel.add(ToSparse()))
+        model.add(parallel).add(SparseJoinTable(2))
+          .add(SparseLinear(1023263, classNum).setName("fc_2")).add(LogSoftMax())
       case "wide" =>
-        model.add(wideModel).add(Linear(1023213, classNum)).add(LogSoftMax())
+        model.add(wideModel).add(SparseLinear(1023213, classNum).setName("fc_2")).add(LogSoftMax())
       case "deep" =>
-        deepModel.add(Linear(50, classNum)).add(LogSoftMax())
+        deepModel.add(Linear(50, classNum).setName("fc_2")).add(LogSoftMax())
       case _ =>
         throw new IllegalArgumentException("unknown type")
     }
