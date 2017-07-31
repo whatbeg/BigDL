@@ -134,7 +134,6 @@ object SparseTensorBLAS {
     val nB: Int = B.size(2)
     val kA: Int = A._shape(1)
     val kB: Int = B.size(1)
-    println(B)
 
     val Avals = A._values.array()
     val Bvals = B.storage().array()
@@ -185,7 +184,6 @@ object SparseTensorBLAS {
     val nB: Int = B.size(2)
     val mA: Int = A.size(1)
     val kA: Int = A.size(2)
-    println(A)
 
     val Bvals = B._values.array()
     val Avals = A.storage().array()

@@ -771,7 +771,7 @@ override def getTensorNumeric(): TensorNumeric[T] = {
     throw new UnsupportedOperationException(s"Unimplemented")
   }
 
-  def resize(size: Array[Int], nElement: Int): Tensor[T] = {
+  override def resize(size: Array[Int], nElement: Int): Tensor[T] = {
     if (this.nElement() < nElement) {
       storage.resize(nElement)
       if (size.length == _indices.length) {
@@ -795,7 +795,7 @@ override def getTensorNumeric(): TensorNumeric[T] = {
   override def concat(
       dim: Int,
       tensors: Seq[Tensor[T]],
-      res: Tensor[T] = null): Tensor[T] = {
+      res: Tensor[T]): Tensor[T] = {
     require(dim == 2)
     val size = tensors.head.size()
     require(size.length == 2)
@@ -830,6 +830,7 @@ override def getTensorNumeric(): TensorNumeric[T] = {
     var j = 0
     while (j < size(1)) {
       var index = 0
+      var offset = 0
       while (index < tensors.size) {
         val findIndex = tensors(index)._indices(0).array().indexOf(j + 1, tensorsOffset(index))
         val curLength = if (findIndex != -1) {
@@ -838,14 +839,32 @@ override def getTensorNumeric(): TensorNumeric[T] = {
           tensors(index).nElement() + tensors(index).storageOffset() - tensorsOffset(index) - 1
         }
         end += curLength
+
+        // copy values
         ev.arraycopy(tensors(index).storage().array(), tensorsOffset(index),
           res.storage().array(), start, curLength)
+
+        // copy indices
         var indicesIndex = 0
         while (indicesIndex < numOfIndices) {
-          System.arraycopy(tensors(index)._indices(indicesIndex).array(), tensorsOffset(index),
-            res._indices(indicesIndex).array(), start, curLength)
+          val indicesIndexArray = tensors(index)._indices(indicesIndex).array()
+          val resultIndicesArray = res._indices(indicesIndex).array()
+          if (indicesIndex != dim - 1 || index == 0) {
+            // copy directly
+            System.arraycopy(tensors(index)._indices(indicesIndex).array(), tensorsOffset(index),
+              res._indices(indicesIndex).array(), start, curLength)
+          } else {
+            // add size
+            var i = 0
+            while (i < curLength) {
+              resultIndicesArray(start + i) = indicesIndexArray(tensorsOffset(index) + i) +
+                offset
+              i += 1
+            }
+          }
           indicesIndex += 1
         }
+        offset += curLength
         tensorsOffset(index) += curLength
         start = end
         index += 1
