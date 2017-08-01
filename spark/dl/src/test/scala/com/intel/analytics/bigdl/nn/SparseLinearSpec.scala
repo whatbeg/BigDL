@@ -19,6 +19,9 @@ package com.intel.analytics.bigdl.nn
 import org.scalatest.{FlatSpec, Matchers}
 import com.intel.analytics.bigdl.numeric.NumericFloat
 import com.intel.analytics.bigdl.tensor.{SparseTensor, Tensor}
+import com.intel.analytics.bigdl.utils.T
+
+import scala.util.Random
 
 class SparseLinearSpec extends FlatSpec with Matchers {
   "Sparse Linear" should "return the same result with Linear" in {
@@ -92,5 +95,80 @@ class SparseLinearSpec extends FlatSpec with Matchers {
     out1 should be (out2)
     gradInput1 should be (gradInput2)
     sl.getParameters()._2 should be (l.getParameters()._2)
+  }
+
+  "Sparse Linear" should "return the same result with Linear 5" in {
+    val gradOutput = Tensor(4, 2).rand()
+    val input = Tensor(4, 10).apply1(_ => Random.nextInt(10) / 9 * Random.nextFloat())
+    val sl = SparseLinear(10, 2, backwardStart = 1, backwardLength = 10)
+    val l = Linear(10, 2)
+    l.weight.copy(sl.weight)
+    l.bias.copy(sl.bias)
+    val sparseInput = Tensor.sparse(input)
+    val out1 = sl.forward(sparseInput)
+    val gradInput1 = sl.backward(sparseInput, gradOutput)
+    val out2 = l.forward(input)
+    val gradInput2 = l.backward(input, gradOutput)
+    out1 should be (out2)
+    gradInput1 should be (gradInput2)
+    sl.getParameters()._2 should be (l.getParameters()._2)
+  }
+
+  "Sparse Linear" should "return the same result with Linear 6" in {
+    val gradOutput = Tensor(4, 2).rand()
+    val input = Tensor(4, 3).apply1(_ => Random.nextInt(5) / 4 * Random.nextFloat())
+    val input2 = Tensor(4, 2).apply1(_ => Random.nextInt(2) * Random.nextFloat())
+    val sl = SparseLinear(5, 2, backwardStart = 1, backwardLength = 5)
+    val sparseModel = Sequential().add(ParallelTable().add(Identity()).add(Identity()))
+      .add(SparseJoinTable(2))
+      .add(sl)
+    val l = Linear(5, 2)
+    l.weight.copy(sl.weight)
+    l.bias.copy(sl.bias)
+    val denseInput = Tensor(4, 5)
+    denseInput.narrow(2, 1, 3).copy(input)
+    denseInput.narrow(2, 4, 2).copy(input2)
+
+    val sparseInput = T(Tensor.sparse(input), Tensor.sparse(input2))
+    Tensor.sparse(denseInput)
+    val out1 = sparseModel.forward(sparseInput).toTensor[Float]
+    val gradInput1 = sparseModel.backward(sparseInput, gradOutput)
+
+    val out2 = l.forward(denseInput)
+    val gradInput2 = l.backward(denseInput, gradOutput)
+    out1 shouldEqual out2
+    sl.gradInput should be (gradInput2)
+    sl.getParameters()._2 should be (l.getParameters()._2)
+  }
+
+  "Sparse Linear" should "return the same result with Linear 7" in {
+    val gradOutput = Tensor(4, 2).rand()
+    val input = Tensor(4, 1023213).apply1(_ => Random.nextInt(100000) / 99999 * Random.nextFloat())
+    val input2 = Tensor(4, 50).apply1(_ => Random.nextInt(2) * Random.nextFloat())
+    val sl = SparseLinear(1023263, 2, backwardStart = 1, backwardLength = 1023263)
+    val sj = SparseJoinTable(2)
+    val sparseModel = Sequential().add(ParallelTable().add(Identity()).add(Identity()))
+      .add(sj)
+      .add(sl)
+    val l = Linear(1023263, 2)
+    l.weight.copy(sl.weight)
+    l.bias.copy(sl.bias)
+    val denseInput = Tensor(4, 1023263)
+    denseInput.narrow(2, 1, 1023213).copy(input)
+    denseInput.narrow(2, 1023214, 50).copy(input2)
+
+    val sparseInput = T(Tensor.sparse(input), Tensor.sparse(input2))
+    val si = Tensor.sparse(denseInput)
+    val aaa = sl.forward(si).toTensor[Float].clone()
+    val out1 = sparseModel.forward(sparseInput).toTensor[Float]
+    val gradInput1 = sparseModel.backward(sparseInput, gradOutput)
+//
+    val out2 = l.forward(denseInput)
+    val gradInput2 = l.backward(denseInput, gradOutput)
+    aaa shouldEqual out2
+    sj.output shouldEqual si
+    out1 shouldEqual out2
+    sl.gradInput should be (gradInput2)
+    sl.getParameters()._2.equals(l.getParameters()._2) shouldEqual true
   }
 }

@@ -17,30 +17,34 @@
 package com.intel.analytics.bigdl.models
 
 import com.intel.analytics.bigdl.models.widedeep.{WideDeep, WideDeepWithSparse}
+import com.intel.analytics.bigdl.nn.Container
+import com.intel.analytics.bigdl.nn.abstractnn.Activity
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import com.intel.analytics.bigdl.numeric.NumericFloat
 import com.intel.analytics.bigdl.tensor.Tensor
-import com.intel.analytics.bigdl.utils.T
+import com.intel.analytics.bigdl.utils.{File, RandomGenerator, T}
 
 import scala.util.Random
 
 class WideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
   "wide deep" should "forward" in {
+    Random.setSeed(100)
+    RandomGenerator.RNG.setSeed(100)
     val model = WideDeep("wide_n_deep", 2)
     val sparseModel = WideDeepWithSparse("wide_n_deep", 2)
     val wideColumn = Tensor(4, 1023213)
     val deepColumn = Tensor(4, 11)
     for (i <- 1 to 4) {
       wideColumn.setValue(i, Random.nextInt(2) + 1, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(1000) + 3, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(1000) + 1003, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(1000) + 2003, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(100) + 3003, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(100) + 3103, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(11) + 3203, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(10000) + 3214, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(10000) + 13214, Random.nextInt(2))
-      wideColumn.setValue(i, Random.nextInt(1000000) + 23214, Random.nextInt(2))
+      wideColumn.setValue(i, Random.nextInt(1000) + 3, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(1000) + 1003, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(1000) + 2003, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(100) + 3003, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(100) + 3103, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(11) + 3203, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(10000) + 3214, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(10000) + 13214, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(1000000) + 23214, Random.nextInt(10))
       deepColumn.setValue(i, 1, 1 + Random.nextInt(100))
       deepColumn.setValue(i, 2, 1 + Random.nextInt(1000))
       deepColumn.setValue(i, 3, 1 + Random.nextInt(2))
@@ -55,9 +59,27 @@ class WideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
     val output = model.forward(wdColumn)
     val sparseInput = T(Tensor.sparse(wideColumn), deepColumn)
     sparseModel.getParameters()._1.copy(model.getParameters()._1)
-    val a = sparseModel.getParametersTable()
-    val b = model.getParametersTable()
+//    sparseModel.getParameters()._1.fill(1)
+//    model.getParameters()._1.fill(1)
     val sparseOutput = sparseModel.forward(sparseInput)
+    val a = model.asInstanceOf[Container[Activity, Activity, Float]]
+      .modules(0).output.toTensor[Float]
+    val b = sparseModel.asInstanceOf[Container[Activity, Activity, Float]]
+      .modules(1).output.toTensor[Float]
+    val c = Tensor.sparse(a)
+    for (i <- 1 to b.size(1))
+      for (j <- 1 to b.size(2)) {
+        if (a.valueAt(i, j) != 0) {
+          println(s"$i $j ${a.valueAt(i, j)}")
+        }
+      }
+    val sLinear = sparseModel.asInstanceOf[Container[Activity, Activity, Float]]
+      .modules(1).output.toTensor[Float]
+    Tensor.sparse(a) shouldEqual b
+    Tensor.dense(b) shouldEqual a
+    File.save(a, "/tmp/a.tensor", true)
+
+
     output shouldEqual sparseOutput
   }
 
