@@ -2502,7 +2502,11 @@ object DenseTensor {
       }
       dt
     } else {
-      sparseTensor
+      if (null == res) {
+        sparseTensor
+      } else {
+        res.resizeAs(sparseTensor).copy(sparseTensor)
+      }
     }
   }
 }

@@ -175,7 +175,7 @@ object SparseTensorBLAS {
         val curKA = AcolIndices(index)
         var n = 0
         while (n < nB) {
-          Cvals(curMA * nB + n) += Avals(index) * Bvals(curKA + n * kB + bOffset)
+          Cvals(curMA * nB + n + cOffset) += Avals(index) * Bvals(curKA + n * kB + bOffset)
           n += 1
         }
         index += 1
@@ -227,7 +227,7 @@ object SparseTensorBLAS {
         val curNB = BcolIndices(index)
         var n = 0
         while (n < mA) {
-          Cvals(n * nB + curNB) += Bvals(index) * Avals(n + curKB * mA + aOffset)
+          Cvals(n * nB + curNB + cOffset) += Bvals(index) * Avals(n + curKB * mA + aOffset)
           n += 1
         }
         index += 1
