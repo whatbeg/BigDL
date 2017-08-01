@@ -43,4 +43,17 @@ class SparseTensorSpec  extends FlatSpec with Matchers {
     exceptedResult.narrow(2, 6, 2).range(16, 21, 1)
     Tensor.dense(result) should be (exceptedResult)
   }
+
+  "concat" should "return right result 3" in {
+    val sTensor1 = Tensor.sparse(Tensor(3, 3).setValue(1, 1, 1))
+    val sTensor2 = Tensor.sparse(Tensor(3, 2).setValue(1, 2, 2))
+    val sTensor3 = Tensor.sparse(Tensor(3, 2).setValue(2, 1, 3))
+    val result = Tensor.sparse(Array(3, 7), 3)
+    result.concat(2, Array(sTensor1, sTensor2, sTensor3), result)
+    val exceptedResult = Tensor(3, 7)
+    exceptedResult.setValue(1, 1, 1)
+    exceptedResult.setValue(1, 5, 2)
+    exceptedResult.setValue(2, 6, 3)
+    Tensor.dense(result) should be (exceptedResult)
+  }
 }

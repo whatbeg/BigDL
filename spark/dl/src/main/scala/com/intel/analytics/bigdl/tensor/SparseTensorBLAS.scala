@@ -29,9 +29,9 @@ object SparseTensorBLAS {
         vec: Tensor[T],
         beta: T,
         r: Tensor[T])(implicit ev: TensorNumeric[T]): Unit = {
-    require(mat.isInstanceOf[SparseTensor[T]] && mat.isContiguous())
-    require(vec.isInstanceOf[DenseTensor[T]] && vec.isContiguous())
-    require(r.isInstanceOf[DenseTensor[T]] && r.isContiguous())
+    if (ev.isEq(beta, ev.zero)) {
+      r.zero()
+    }
 
     (alpha, mat, vec, beta, r)  match {
       case (alpha: Double, a: SparseTensor[Double], x: DenseTensor[Double],
@@ -52,7 +52,9 @@ object SparseTensorBLAS {
         beta: Double,
         y: DenseTensor[Double]): Unit = {
     val xValues = x.storage().array()
+    val xOffset = x.storageOffset() - 1
     val yValues = y.storage().array()
+    val yOffset = y.storageOffset() - 1
     val mA: Int = A._shape(0)
     val nA: Int = A._shape(1)
 
@@ -69,7 +71,7 @@ object SparseTensorBLAS {
       val Arow = Arows(valueCounter)
       val Acol = Acols(valueCounter)
       val Aval = Avals(valueCounter)
-      yValues(Arow-1) += Aval * alpha * xValues(Acol-1)
+      yValues(Arow - 1 + yOffset) += Aval * alpha * xValues(Acol - 1 + xOffset)
       valueCounter += 1
     }
   }
@@ -81,7 +83,9 @@ object SparseTensorBLAS {
                 beta: Float,
                 y: DenseTensor[Float]): Unit = {
     val xValues = x.storage().array()
+    val xOffset = x.storageOffset() - 1
     val yValues = y.storage().array()
+    val yOffset = y.storageOffset() - 1
     val mA: Int = A._shape(0)
     val nA: Int = A._shape(1)
 
@@ -109,6 +113,10 @@ object SparseTensorBLAS {
         mat2: Tensor[T],
         beta: T,
         r: Tensor[T])(implicit ev: TensorNumeric[T]): Unit = {
+    if (ev.isEq(beta, ev.zero)) {
+      r.zero()
+    }
+
     (alpha, mat1, mat2, beta, r)  match {
 //      case (alpha: Double, a: SparseTensor[Double], x: DenseTensor[Double],
 //      beta: Double, y: DenseTensor[Double]) =>
@@ -137,7 +145,9 @@ object SparseTensorBLAS {
 
     val Avals = A._values.array()
     val Bvals = B.storage().array()
+    val bOffset = B.storageOffset() - 1
     val Cvals = C.storage().array()
+    val cOffset = C.storageOffset() - 1
     val ArowIndices = A._indices(A.indices_order(0))
     val AcolIndices = A._indices(A.indices_order(1))
 
@@ -154,7 +164,7 @@ object SparseTensorBLAS {
         val curKA = AcolIndices(index)
         var n = 0
         while (n < nB) {
-          Cvals(curMA * nB + n) += Avals(index) * Bvals(curKA * nB + n)
+          Cvals(curMA * nB + n) += Avals(index) * Bvals(curKA * nB + n + bOffset)
           n += 1
         }
         index += 1
@@ -165,7 +175,7 @@ object SparseTensorBLAS {
         val curKA = AcolIndices(index)
         var n = 0
         while (n < nB) {
-          Cvals(curMA * nB + n) += Avals(index) * Bvals(curKA + n * kB)
+          Cvals(curMA * nB + n) += Avals(index) * Bvals(curKA + n * kB + bOffset)
           n += 1
         }
         index += 1
@@ -187,7 +197,9 @@ object SparseTensorBLAS {
 
     val Bvals = B._values.array()
     val Avals = A.storage().array()
+    val aOffset = A.storageOffset() - 1
     val Cvals = C.storage().array()
+    val cOffset = C.storageOffset() - 1
     val BrowIndices = B._indices(B.indices_order(0))
     val BcolIndices = B._indices(B.indices_order(1))
 
@@ -204,7 +216,7 @@ object SparseTensorBLAS {
         val curKB = BcolIndices(index)
         var n = 0
         while (n < mA) {
-          Cvals(curMB * mA + n) += Bvals(index) * Avals(curKB * mA + n)
+          Cvals(curMB * mA + n) += Bvals(index) * Avals(curKB * mA + n + aOffset)
           n += 1
         }
         index += 1
@@ -215,7 +227,7 @@ object SparseTensorBLAS {
         val curNB = BcolIndices(index)
         var n = 0
         while (n < mA) {
-          Cvals(n * nB + curNB) += Bvals(index) * Avals(n + curKB * mA)
+          Cvals(n * nB + curNB) += Bvals(index) * Avals(n + curKB * mA + aOffset)
           n += 1
         }
         index += 1
