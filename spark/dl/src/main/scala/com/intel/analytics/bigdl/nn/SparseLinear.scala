@@ -64,11 +64,11 @@ class SparseLinear[T: ClassTag](
       "Linear: " + ErrorInfo.constrainInputAsVectorOrBatch)
     if (backwardStart >= 0 && backwardLength > 0) {
       // TODO: _input to dense
-      val _input = Tensor.dense(input.narrow(2, backwardStart, backwardLength))
+      val _inputSize = Array(input.size(1), backwardLength)
       val _weight = weight.narrow(2, backwardStart, backwardLength)
 
       val nElement = gradInput.nElement()
-      gradInput.resizeAs(_input)
+      gradInput.resize(_inputSize)
       if (nElement != gradInput.nElement()) {
         gradInput.zero()
       }
