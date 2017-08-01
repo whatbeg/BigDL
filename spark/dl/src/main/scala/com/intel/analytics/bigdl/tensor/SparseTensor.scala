@@ -832,41 +832,45 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       var index = 0
       var offset = 0
       while (index < tensors.size) {
-        val findIndex = tensors(index)._indices(0).array().indexOf(j + 1, tensorsOffset(index))
-        val curLength = if (findIndex != -1) {
-          findIndex - tensorsOffset(index)
+        val findIndexStart = tensors(index)._indices(0).array().indexOf(j, tensorsOffset(index))
+        val findIndexEnd = tensors(index)._indices(0).array().lastIndexOf(j)
+        val curLength = if (findIndexStart != -1 && findIndexEnd != -1) {
+          findIndexEnd - findIndexStart + 1
         } else {
-          tensors(index).nElement() + tensors(index).storageOffset() - tensorsOffset(index) - 1
+          0
         }
-        end += curLength
 
-        // copy values
-        ev.arraycopy(tensors(index).storage().array(), tensorsOffset(index),
-          res.storage().array(), start, curLength)
+        if (0 != curLength) {
+          end += curLength
 
-        // copy indices
-        var indicesIndex = 0
-        while (indicesIndex < numOfIndices) {
-          val indicesIndexArray = tensors(index)._indices(indicesIndex).array()
-          val resultIndicesArray = res._indices(indicesIndex).array()
-          if (indicesIndex != dim - 1 || index == 0) {
-            // copy directly
-            System.arraycopy(tensors(index)._indices(indicesIndex).array(), tensorsOffset(index),
-              res._indices(indicesIndex).array(), start, curLength)
-          } else {
-            // add size
-            var i = 0
-            while (i < curLength) {
-              resultIndicesArray(start + i) = indicesIndexArray(tensorsOffset(index) + i) +
-                offset
-              i += 1
+          // copy values
+          ev.arraycopy(tensors(index).storage().array(), tensorsOffset(index),
+            res.storage().array(), start, curLength)
+
+          // copy indices
+          var indicesIndex = 0
+          while (indicesIndex < numOfIndices) {
+            val indicesIndexArray = tensors(index)._indices(indicesIndex).array()
+            val resultIndicesArray = res._indices(indicesIndex).array()
+            if (indicesIndex != dim - 1 || index == 0) {
+              // copy directly
+              System.arraycopy(tensors(index)._indices(indicesIndex).array(), tensorsOffset(index),
+                res._indices(indicesIndex).array(), start, curLength)
+            } else {
+              // add size
+              var i = 0
+              while (i < curLength) {
+                resultIndicesArray(start + i) = indicesIndexArray(tensorsOffset(index) + i) +
+                  offset
+                i += 1
+              }
             }
+            indicesIndex += 1
           }
-          indicesIndex += 1
+          tensorsOffset(index) += curLength
+          start = end
         }
-        offset += curLength
-        tensorsOffset(index) += curLength
-        start = end
+        offset += tensors(index).size(dim)
         index += 1
       }
       j += 1
@@ -1755,7 +1759,54 @@ override def exp(): Tensor[T] = {
   }
 
   override def toTensor[D](implicit ev: TensorNumeric[D]): Tensor[D] = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    if (ev.getType() == ev.getType()) {
+      this.asInstanceOf[Tensor[D]]
+    } else {
+      throw new IllegalArgumentException(s"The type ${ev.getType().getClass}" +
+        s" in toTensor[${ev.getType().getClass}] is not same" +
+        s"as the numeric type ${ev.getType().getClass} of the " +
+        "corresponding module, please keep them same.")
+    }
+  }
+
+  override def equals(obj: Any): Boolean = {
+    if (obj == null) {
+      return false
+    }
+    if (!obj.isInstanceOf[SparseTensor[T]]) {
+      return false
+    }
+    val other = obj.asInstanceOf[SparseTensor[T]]
+    if (this.eq(other)) {
+      return true
+    }
+    if (this.nDimension != other.nDimension) {
+      return false
+    }
+    var d = 1
+    while (d <= this.nDimension) {
+      if (this.size(d) != other.size(d)) {
+        return false
+      }
+      d += 1
+    }
+
+    println(_indices.map(_.array()).deep == other._indices.map(_.array()).deep)
+    println(_indices(0).array.deep == other._indices(0).array().deep)
+    println(_indices(1).array.deep == other._indices(1).array().deep)
+    println(_values.array().deep == other._values.array().deep)
+    println(this._shape.deep == other._shape.deep)
+    println(this._nElement == other._nElement)
+
+    _indices.map(_.array()).deep == other._indices.map(_.array()).deep &&
+      _values.array().deep == other._values.array().deep &&
+      this._shape.deep == other._shape.deep &&
+      this._nElement == other._nElement
+  }
+
+  override def hashCode(): Int = {
+    val state = Seq(indices_order, _indices, _values, _storageOffset, _nElement, _shape, nDimension)
+    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
 }
 

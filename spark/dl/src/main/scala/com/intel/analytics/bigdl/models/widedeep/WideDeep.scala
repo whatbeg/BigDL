@@ -50,15 +50,15 @@ object WideDeep {
       .setName("embedding_6")))
     deepColumn.add(Sequential().add(Narrow(2, 1023220, 5)).add(Reshape(Array(5))))
     deepModel.add(deepColumn).add(Linear(53, 100).setName("fc_1"))
-      .add(ReLU()).add(Linear(100, 50)).add(ReLU())
+      .add(ReLU()).add(Linear(100, 50).setName("fc_2")).add(ReLU())
     modelType match {
       case "wide_n_deep" =>
         wideModel.add(deepModel)
-        model.add(wideModel).add(Linear(1023263, classNum).setName("fc_2")).add(LogSoftMax())
+        model.add(wideModel).add(Linear(1023263, classNum).setName("fc_3")).add(LogSoftMax())
       case "wide" =>
-        model.add(wideModel).add(Linear(1023213, classNum).setName("fc_2")).add(LogSoftMax())
+        model.add(wideModel).add(Linear(1023213, classNum).setName("fc_3")).add(LogSoftMax())
       case "deep" =>
-        model.add(deepModel).add(Linear(50, classNum).setName("fc_2")).add(LogSoftMax())
+        model.add(deepModel).add(Linear(50, classNum).setName("fc_3")).add(LogSoftMax())
       case _ =>
         throw new IllegalArgumentException("unknown type")
     }
@@ -92,18 +92,18 @@ object WideDeepWithSparse {
       .setName("embedding_6")))
     deepColumn.add(Sequential().add(Narrow(2, 7, 5)).add(Reshape(Array(5))))
     deepModel.add(deepColumn).add(Linear(53, 100).setName("fc_1"))
-      .add(ReLU()).add(Linear(100, 50)).add(ReLU())
+      .add(ReLU()).add(Linear(100, 50).setName("fc_2")).add(ReLU())
     modelType match {
       case "wide_n_deep" =>
         val parallel = ParallelTable()
         parallel.add(wideModel)
         parallel.add(deepModel.add(ToSparse()))
         model.add(parallel).add(SparseJoinTable(2))
-          .add(SparseLinear(1023263, classNum).setName("fc_2")).add(LogSoftMax())
+          .add(SparseLinear(1023263, classNum).setName("fc_3")).add(LogSoftMax())
       case "wide" =>
-        model.add(wideModel).add(SparseLinear(1023213, classNum).setName("fc_2")).add(LogSoftMax())
+        model.add(wideModel).add(SparseLinear(1023213, classNum).setName("fc_3")).add(LogSoftMax())
       case "deep" =>
-        deepModel.add(Linear(50, classNum).setName("fc_2")).add(LogSoftMax())
+        deepModel.add(Linear(50, classNum).setName("fc_3")).add(LogSoftMax())
       case _ =>
         throw new IllegalArgumentException("unknown type")
     }
