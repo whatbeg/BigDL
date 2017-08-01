@@ -50,7 +50,7 @@ object WideDeep {
       .setName("embedding_6")))
     deepColumn.add(Sequential().add(Narrow(2, 1023220, 5)).add(Reshape(Array(5))))
     deepModel.add(deepColumn).add(Linear(53, 100).setName("fc_1"))
-      .add(ReLU()).add(Linear(100, 50).setName("fc_2")).add(ReLU())
+      .add(ReLU()).add(Linear(100, 50).setName("fc_2")).add(ReLU()).add(Echo())
     modelType match {
       case "wide_n_deep" =>
         wideModel.add(deepModel)
@@ -92,14 +92,15 @@ object WideDeepWithSparse {
       .setName("embedding_6")))
     deepColumn.add(Sequential().add(Narrow(2, 7, 5)).add(Reshape(Array(5))))
     deepModel.add(deepColumn).add(Linear(53, 100).setName("fc_1"))
-      .add(ReLU()).add(Linear(100, 50).setName("fc_2")).add(ReLU())
+      .add(ReLU()).add(Linear(100, 50).setName("fc_2")).add(ReLU()).add(Echo())
     modelType match {
       case "wide_n_deep" =>
         val parallel = ParallelTable()
         parallel.add(wideModel)
         parallel.add(deepModel.add(ToSparse()))
         model.add(parallel).add(SparseJoinTable(2))
-          .add(SparseLinear(1023263, classNum).setName("fc_3")).add(LogSoftMax())
+          .add(SparseLinear(1023263, classNum, backwardStart = 1023213, backwardLength = 50)
+            .setName("fc_3")).add(LogSoftMax())
       case "wide" =>
         model.add(wideModel).add(SparseLinear(1023213, classNum).setName("fc_3")).add(LogSoftMax())
       case "deep" =>

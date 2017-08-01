@@ -539,7 +539,11 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
         newStorageArray(count) = values(i)
         var dims = 0
         while (dims < this.dim()) {
-          newIndices(dims)(count) = _indices(dims)(i)
+          if (dims == dim - 1) {
+            newIndices(dims)(count) = _indices(dims)(i) - _index
+          } else {
+            newIndices(dims)(count) = _indices(dims)(i)
+          }
           dims += 1
         }
         count += 1
