@@ -69,6 +69,7 @@ class WideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
     RandomGenerator.RNG.setSeed(100)
     val model = WideDeep("wide_n_deep", 2)
     val sparseModel = WideDeepWithSparse("wide_n_deep", 2)
+      // create a wide&deep like input
     val wideColumn = Tensor(4, 1023213)
     val deepColumn = Tensor(4, 11)
     for (i <- 1 to 4) {
@@ -96,11 +97,14 @@ class WideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
     val output = model.forward(wdColumn).toTensor[Float]
     val sparseInput = T(Tensor.sparse(wideColumn), deepColumn)
     sparseModel.getParameters()._1.copy(model.getParameters()._1)
+    sparseModel.forward(sparseInput)
     val sparseOutput = sparseModel.forward(sparseInput)
 
     val gradOutput = output.clone().rand()
-    val sparseGradInput = sparseModel.backward(sparseInput, gradOutput)
     val denseGradInput = model.backward(wdColumn, gradOutput)
+    sparseModel.backward(sparseInput, gradOutput)
+    sparseModel.zeroGradParameters()
+    val sparseGradInput = sparseModel.backward(sparseInput, gradOutput)
 
     val a = sparseModel.getParametersTable()
     val b = model.getParametersTable()
