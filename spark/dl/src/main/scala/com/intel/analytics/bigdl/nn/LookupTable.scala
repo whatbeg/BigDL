@@ -16,7 +16,8 @@
 package com.intel.analytics.bigdl.nn
 
 import breeze.numerics.{abs, pow}
-import com.intel.analytics.bigdl.nn.abstractnn.TensorModule
+import com.intel.analytics.bigdl.nn.abstractnn.{Initializable, TensorModule}
+import com.intel.analytics.bigdl.optim.Regularizer
 import com.intel.analytics.bigdl.tensor.Tensor
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
 import com.intel.analytics.bigdl.utils.RandomGenerator._
@@ -36,13 +37,18 @@ import scala.reflect.ClassTag
  * @param normType norm regularization number, default 2
  * @param shouldScaleGradByFreq
  * @tparam T The numeric type in the criterion, usually which are [[Float]] or [[Double]]
+ * @param wRegularizer: instance of [[Regularizer]]
+ *                    (eg. L1 or L2 regularization), applied to the input weights matrices.
  */
 @SerialVersionUID( - 4832171200145114633L)
 class LookupTable[T: ClassTag]
 (val nIndex: Int, val nOutput: Int, val paddingValue: Double = 0,
- val maxNorm: Double = Double.MaxValue,
- val normType: Double = 2.0, shouldScaleGradByFreq: Boolean = false)
-(implicit ev: TensorNumeric[T]) extends TensorModule[T] {
+  val maxNorm: Double = Double.MaxValue,
+  val normType: Double = 2.0,
+  shouldScaleGradByFreq: Boolean = false,
+  var wRegularizer: Regularizer[T] = null
+)
+(implicit ev: TensorNumeric[T]) extends TensorModule[T] with Initializable {
 
   val weight = Tensor[T](nIndex, nOutput)
   val gradWeight = Tensor[T](nIndex, nOutput).zero()
@@ -51,11 +57,13 @@ class LookupTable[T: ClassTag]
   private var normBuffer = Tensor[T]()
   private val countBuffer = Tensor[T]()
 
-  reset()
+  {
+    val wInit = RandomNormal(0, 1)
+    setInitMethod(weightInitMethod = wInit)
+  }
 
   override def reset(): Unit = {
-    // todo: stdv = stdv or 1
-    weight.apply1(_ => ev.fromType[Double](RNG.normal(0, 1)))
+    weightInitMethod.init(weight, VariableFormat.Default)
   }
 
   private def renorm(input : Tensor[T]): Unit = {
@@ -176,8 +184,7 @@ class LookupTable[T: ClassTag]
     gradInput
   }
 
-  override def accGradParameters(input: Tensor[T], gradOutput: Tensor[T],
-    scale: Double = 1.0): Unit = {
+  override def accGradParameters(input: Tensor[T], gradOutput: Tensor[T]): Unit = {
     inputBuffer = input.contiguous()
     require(gradWeight.isContiguous(), "LookupTable: gradWeight must be contiguous")
     require(inputBuffer.dim() == 1 || inputBuffer.dim() == 2,
@@ -206,25 +213,31 @@ class LookupTable[T: ClassTag]
         "LookupTable: elements of input should be greater than or equal to 1")
       i += 1
     }
+    if (scaleW != 0) {
+      val gw = gradWeight.storage().array()
+      val go = _gradOutput.storage().array()
+      val stride = gradWeight.stride(1)
 
-    val gw = gradWeight.storage().array()
-    val go = _gradOutput.storage().array()
-    val stride = gradWeight.stride(1)
-
-    i = 0
-    while (i < numEle) {
-      if (input_data(i + input_offset) != paddingValue) {
-        val k = ev.toType[Int](input_data(i + input_offset)) - 1
-        val scale_ = if (null != count_data) scale / ev.toType[Double](count_data(k)) else scale
-        ev.axpy(stride, ev.fromType(scale_), go, i*stride + _gradOutput.storageOffset() - 1, 1,
-          gw, k*stride + gradWeight.storageOffset() - 1, 1)
+      i = 0
+      while (i < numEle) {
+        if (input_data(i + input_offset) != paddingValue) {
+          val k = ev.toType[Int](input_data(i + input_offset)) - 1
+          val scale_ = if (null != count_data) scaleW /
+            ev.toType[Double](count_data(k)) else scaleW
+          ev.axpy(stride, ev.fromType(scale_), go, i * stride + _gradOutput.storageOffset() - 1, 1,
+            gw, k * stride + gradWeight.storageOffset() - 1, 1)
+        }
+        i += 1
       }
-      i += 1
+
+      if (null != wRegularizer) {
+        wRegularizer.accRegularization(weight, gradWeight, scaleW)
+      }
     }
   }
 
   override def toString(): String = {
-    s"nn.LookupTable($nIndex, $nOutput, $paddingValue, $maxNorm, $normType)"
+    s"${getPrintName}($nIndex, $nOutput, $paddingValue, $maxNorm, $normType)"
   }
 
   override def zeroGradParameters(): Unit = {
@@ -275,9 +288,12 @@ object LookupTable {
   def apply[@specialized(Float, Double)T: ClassTag](
     nIndex: Int, nOutput: Int,
     paddingValue: Double = 0, maxNorm: Double = Double.MaxValue,
-    normType: Double = 2.0, shouldScaleGradByFreq: Boolean = false)
+    normType: Double = 2.0, shouldScaleGradByFreq: Boolean = false,
+    wRegularizer: Regularizer[T] = null
+  )
    (implicit ev: TensorNumeric[T]): LookupTable[T] =
-    new LookupTable[T](nIndex, nOutput, paddingValue, maxNorm, normType, shouldScaleGradByFreq)
+    new LookupTable[T](nIndex, nOutput, paddingValue,
+      maxNorm, normType, shouldScaleGradByFreq, wRegularizer)
 }
 
 

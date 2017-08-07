@@ -223,7 +223,7 @@ class TextClassifier(param: AbstractTextClassificationParams) extends Serializab
       Sample(
         featureTensor = Tensor(input.flatten, Array(sequenceLen, embeddingDim))
           .transpose(1, 2).contiguous(),
-        labelTensor = Tensor(Array(label), Array(1)))
+        label = label)
     }
 
     val Array(trainingRDD, valRDD) = sampleRDD.randomSplit(
@@ -235,10 +235,9 @@ class TextClassifier(param: AbstractTextClassificationParams) extends Serializab
       criterion = new ClassNLLCriterion[Float](),
       batchSize = param.batchSize
     )
-    val state = T("learningRate" -> 0.01, "learningRateDecay" -> 0.0002)
+
     optimizer
-      .setState(state)
-      .setOptimMethod(new Adagrad())
+      .setOptimMethod(new Adagrad(learningRate = 0.01, learningRateDecay = 0.0002))
       .setValidation(Trigger.everyEpoch, valRDD, Array(new Top1Accuracy[Float]), param.batchSize)
       .setEndWhen(Trigger.maxEpoch(20))
       .optimize()
@@ -256,14 +255,14 @@ class TextClassifier(param: AbstractTextClassificationParams) extends Serializab
       Sample(
         featureTensor = Tensor(input.flatten, Array(param.maxSequenceLength, param.embeddingDim))
           .transpose(1, 2).contiguous(),
-        labelTensor = Tensor(Array(label), Array(1)))
+        label = label)
     }
 
     val valRDD = rdds(1).map { case (input: Array[Array[Float]], label: Float) =>
       Sample(
         featureTensor = Tensor(input.flatten, Array(param.maxSequenceLength, param.embeddingDim))
           .transpose(1, 2).contiguous(),
-        labelTensor = Tensor(Array(label), Array(1)))
+        label = label)
     }
 
     // train
@@ -274,10 +273,8 @@ class TextClassifier(param: AbstractTextClassificationParams) extends Serializab
       batchSize = param.batchSize
     )
 
-    val state = T("learningRate" -> 0.01, "learningRateDecay" -> 0.0002)
     optimizer
-      .setState(state)
-      .setOptimMethod(new Adagrad())
+      .setOptimMethod(new Adagrad(learningRate = 0.01, learningRateDecay = 0.0002))
       .setValidation(Trigger.everyEpoch, valRDD, Array(new Top1Accuracy[Float]), param.batchSize)
       .setEndWhen(Trigger.maxEpoch(1))
       .optimize()
