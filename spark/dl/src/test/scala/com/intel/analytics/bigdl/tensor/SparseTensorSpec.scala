@@ -20,6 +20,30 @@ import org.scalatest.{FlatSpec, Matchers}
 import com.intel.analytics.bigdl.numeric.NumericFloat
 
 class SparseTensorSpec  extends FlatSpec with Matchers {
+  "concat" should "return right result on dim-1 concatenation" in {
+    val sTensor1 = Tensor.sparse(Tensor(3).range(1, 3, 1))
+    val sTensor2 = Tensor.sparse(Tensor(3).range(4, 6, 1))
+    val result = Tensor.sparse(Array(2, 3), 6)
+    result.concat(1, Array(sTensor1, sTensor2), result)
+    val expectedResult = Tensor(2, 3)
+    expectedResult.narrow(1, 1, 1).range(1, 3, 1)
+    expectedResult.narrow(1, 2, 1).range(4, 6, 1)
+    Tensor.dense(result) should be (expectedResult)
+  }
+
+  "concat" should "return right result on dim-1 concatenation 2" in {
+    val sTensor1 = Tensor.sparse(Tensor(3).setValue(2, 1))
+    val sTensor2 = Tensor.sparse(Tensor(3).setValue(3, 3))
+    val sTensor3 = Tensor.sparse(Tensor(3).setValue(1, 2))
+    val result = Tensor.sparse(Array(3, 3), 3)
+    result.concat(1, Array(sTensor1, sTensor2, sTensor3), result)
+    val expectedResult = Tensor(3, 3)
+    expectedResult.setValue(1, 2, 1)
+    expectedResult.setValue(2, 3, 3)
+    expectedResult.setValue(3, 1, 2)
+    Tensor.dense(result) should be (expectedResult)
+  }
+
   "concat" should "return right result" in {
     val sTensor1 = Tensor.sparse(Tensor(3, 3).range(1, 9, 1))
     val sTensor2 = Tensor.sparse(Tensor(3, 2).range(10, 15, 1))
@@ -54,6 +78,32 @@ class SparseTensorSpec  extends FlatSpec with Matchers {
     exceptedResult.setValue(1, 1, 1)
     exceptedResult.setValue(1, 5, 2)
     exceptedResult.setValue(2, 6, 3)
+    Tensor.dense(result) should be (exceptedResult)
+  }
+
+  "concat" should "return right result on first dimension" in {
+    val sTensor1 = Tensor.sparse(Tensor(3, 3).setValue(1, 1, 1))
+    val sTensor2 = Tensor.sparse(Tensor(2, 3).setValue(1, 2, 2))
+    val sTensor3 = Tensor.sparse(Tensor(2, 3).setValue(2, 1, 3))
+    val result = Tensor.sparse(Array(7, 3), 3)
+    result.concat(1, Array(sTensor1, sTensor2, sTensor3), result)
+    val exceptedResult = Tensor(7, 3)
+    exceptedResult.setValue(1, 1, 1)
+    exceptedResult.setValue(4, 2, 2)
+    exceptedResult.setValue(7, 1, 3)
+    Tensor.dense(result) should be (exceptedResult)
+  }
+
+  "concat" should "return right result on first dimension 2" in {
+    val sTensor1 = Tensor.sparse(Tensor(3, 3).setValue(2, 1, 1)).narrow(1, 2, 2)
+    val sTensor2 = Tensor.sparse(Tensor(2, 3).setValue(1, 2, 2))
+    val sTensor3 = Tensor.sparse(Tensor(2, 3).setValue(2, 1, 3))
+    val result = Tensor.sparse(Array(6, 3), 3)
+    result.concat(1, Array(sTensor1, sTensor2, sTensor3), result)
+    val exceptedResult = Tensor(6, 3)
+    exceptedResult.setValue(1, 1, 1)
+    exceptedResult.setValue(3, 2, 2)
+    exceptedResult.setValue(6, 1, 3)
     Tensor.dense(result) should be (exceptedResult)
   }
 }
