@@ -25,14 +25,14 @@ import com.intel.analytics.bigdl.models.widedeep.Utils
 import org.apache.spark.{SparkConf, SparkContext}
 
 
-class TestSpec extends FlatSpec with BeforeAndAfter with Matchers {
+class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
   var sc: SparkContext = null
   val nodeNumber = 1
   val coreNumber = 1
 
   before {
     Engine.init(nodeNumber, coreNumber, true)
-    val conf = new SparkConf().setMaster("local[1]").setAppName("DataSetSpec")
+    val conf = new SparkConf().setMaster("local[1]").setAppName("WideDeepUtilSpec")
     sc = new SparkContext(conf)
   }
 
@@ -51,13 +51,13 @@ class TestSpec extends FlatSpec with BeforeAndAfter with Matchers {
   }
 
   val resource = getClass().getClassLoader().getResource("wide_deep")
-  println(resource)
+  // println(resource)
 
   val s = Utils
 
   val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.loadTrain(
     processPath(resource.getPath()) + File.separator + "train.data")
-  print(dataSet.length)
-  // println(Tensor.dense(dataSet(0)))
-
+  assert (dataSet.length == 32561)
+  assert (dataSet(1).featureLength(1) == 1023219)
+  assert (dataSet(1).numFeature() == 2)
 }
