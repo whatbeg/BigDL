@@ -18,8 +18,10 @@ package com.intel.analytics.bigdl.models.widedeep
 
 import java.nio.file.{Files, Paths}
 
+import com.intel.analytics.bigdl.dataset.{Sample, TensorSample}
 import com.intel.analytics.bigdl.tensor.{Storage, Tensor}
-import com.intel.analytics.bigdl.utils.File
+import com.intel.analytics.bigdl.utils.{File, T}
+import org.apache.spark.rdd.RDD
 
 import scala.io.Source
 
@@ -68,22 +70,20 @@ object Utils {
     (sth.hashCode() % bucketsize + bucketsize) % bucketsize + start
   }
 
-  private[bigdl] def loadTrain(featureFile: String): Array[Tensor[Float]] = {
+  private[bigdl] def loadTrain(featureFile: String): Array[Sample[Float]] = {
 
-    val results = new Array[Tensor[Float]](32561)
+    val results = new Array[Sample[Float]](32561)
     if (featureFile.startsWith(File.hdfsPrefix)) {
       val fscontent = File.loadFromHdfs(File.hdfsPrefix)
       results
     } else {
       val src = Source.fromFile(Paths.get(featureFile).toString)
       val iter = src.getLines().map(_.stripMargin.split(","))
-
-      val train_label = new Array[Int](32561)
-      val storage = Storage[Float](21)
+      val storage = Storage[Float](16)
       val storageArray = storage.array()
       var i = 0
       for (line <- iter if i < 32561) {
-        val indices = new Array[Int](21)
+        val indices = new Array[Int](16)
         val lis = line.toSeq
         indices(0) = getGender(lis(GENDER), start = 0)                  // 2
         indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
@@ -113,45 +113,33 @@ object Utils {
         storageArray(14) = indices(1)
         storageArray(15) = indices(3)
 
-        indices(16) = 1023219
-        indices(17) = 1023220
-        indices(18) = 1023221
-        indices(19) = 1023222
-        indices(20) = 1023223
-
-        storageArray(16) = lis(AGE).toFloat
-        storageArray(17) = lis(EDUCATION_NUM).toFloat
-        storageArray(18) = lis(CAPITAL_GAIN).toFloat
-        storageArray(19) = lis(CAPITAL_LOSS).toFloat
-        storageArray(20) = lis(HOURS_PER_WEEK).toFloat
-
-        val sps = Tensor.sparse(Array(indices), storage, Array(1023224), 1)
-        results(i) = sps
-        train_label(i) = if (lis(LABEL) == ">50K") 1 else 0
-
+        val sps = Tensor.sparse(Array(indices), storage, Array(1023219), 1)
+        val den = Tensor(Array(lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat,
+          lis(CAPITAL_GAIN).toFloat, lis(CAPITAL_LOSS).toFloat,
+          lis(HOURS_PER_WEEK).toFloat), Array(5))
+        val train_label = if (lis(LABEL) == ">50K") Tensor(Array(1f), Array(1))
+                         else Tensor(Array(0f), Array(1))
+        results(i) = TensorSample(Array(sps, den), Array(train_label))
         i += 1
       }
     }
     results
-
   }
 
-  private[bigdl] def loadTest(featureFile: String): Array[Tensor[Float]] = {
+  private[bigdl] def loadTest(featureFile: String): Array[Sample[Float]] = {
 
-    val results = new Array[Tensor[Float]](32561)
+    val results = new Array[Sample[Float]](16281)
     if (featureFile.startsWith(File.hdfsPrefix)) {
       val fscontent = File.loadFromHdfs(File.hdfsPrefix)
       results
     } else {
       val src = Source.fromFile(Paths.get(featureFile).toString)
       val iter = src.getLines().map(_.stripMargin.split(","))
-
-      val test_label = new Array[Int](16281)
-      val storage = Storage[Float](21)
+      val storage = Storage[Float](16)
       val storageArray = storage.array()
       var i = 0
       for (line <- iter if i < 16282 && i >= 1) {
-        val indices = Array[Int](21)
+        val indices = new Array[Int](16)
         val lis = line.toSeq
         indices(0) = getGender(lis(GENDER), start = 0)                  // 2
         indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
@@ -181,26 +169,16 @@ object Utils {
         storageArray(14) = indices(1)
         storageArray(15) = indices(3)
 
-        indices(16) = 1023219
-        indices(17) = 1023220
-        indices(18) = 1023221
-        indices(19) = 1023222
-        indices(20) = 1023223
-
-        storageArray(16) = lis(AGE).toFloat
-        storageArray(17) = lis(EDUCATION_NUM).toFloat
-        storageArray(18) = lis(CAPITAL_GAIN).toFloat
-        storageArray(19) = lis(CAPITAL_LOSS).toFloat
-        storageArray(20) = lis(HOURS_PER_WEEK).toFloat
-
-        val sps = Tensor.sparse(Array(indices), storage, Array(1023224), 1)
-        results(i) = sps
-        test_label(i) = if (lis(LABEL) == ">50K") 1 else 0
-
+        val sps = Tensor.sparse(Array(indices), storage, Array(1023219), 1)
+        val den = Tensor(Array(lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat,
+          lis(CAPITAL_GAIN).toFloat, lis(CAPITAL_LOSS).toFloat,
+          lis(HOURS_PER_WEEK).toFloat), Array(5))
+        val test_label = if (lis(LABEL) == ">50K") Tensor(Array(1f), Array(1))
+                          else Tensor(Array(0f), Array(1))
+        results(i) = TensorSample(Array(sps, den), Array(test_label))
         i += 1
       }
     }
     results
-
   }
 }
