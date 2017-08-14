@@ -21,7 +21,6 @@ import java.io.File
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import com.intel.analytics.bigdl.tensor.{DenseTensor, Tensor}
 import com.intel.analytics.bigdl.utils.{Engine, T}
-import com.intel.analytics.bigdl.models.widedeep.Utils
 import org.apache.spark.{SparkConf, SparkContext}
 
 
@@ -30,17 +29,9 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
   val nodeNumber = 1
   val coreNumber = 1
 
-  before {
-    Engine.init(nodeNumber, coreNumber, true)
-    val conf = new SparkConf().setMaster("local[1]").setAppName("WideDeepUtilSpec")
-    sc = new SparkContext(conf)
-  }
-
-  after {
-    if (sc != null) {
-      sc.stop()
-    }
-  }
+  Engine.init(nodeNumber, coreNumber, true)
+  val conf = new SparkConf().setMaster("local[1]").setAppName("WideDeepUtilSpec")
+  sc = new SparkContext(conf)
 
   private def processPath(path: String): String = {
     if (path.contains(":")) {
@@ -51,13 +42,11 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
   }
 
   val resource = getClass().getClassLoader().getResource("wide_deep")
-  // println(resource)
 
-  val s = Utils
-
-  val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.loadTrain(
+  val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.loadTrain(sc,
     processPath(resource.getPath()) + File.separator + "train.data")
-  assert (dataSet.length == 32561)
-  assert (dataSet(1).featureLength(1) == 1023219)
-  assert (dataSet(1).numFeature() == 2)
+
+  assert (dataSet.count() == 32561)
+
+  sc.stop()
 }
