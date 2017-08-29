@@ -23,10 +23,79 @@ import com.intel.analytics.bigdl.tensor.{Storage, Tensor}
 import com.intel.analytics.bigdl.utils.{File, T}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-
+import scopt.OptionParser
 import scala.io.Source
 
 object Utils {
+
+  case class TrainParams(
+    folder: String = "./",
+    checkpoint: Option[String] = None,
+    modelSnapshot: Option[String] = None,
+    stateSnapshot: Option[String] = None,
+    batchSize: Int = 128,
+    learningRate: Double = 0.001,
+    learningRateDecay: Double = 0.0,
+    maxEpoch: Int = 20,
+    coreNumber: Int = -1,
+    nodeNumber: Int = -1,
+    overWriteCheckpoint: Boolean = false
+  )
+
+  val trainParser = new OptionParser[TrainParams]("BigDL Wide and Deep Learning Example") {
+    opt[String]('f', "folder")
+      .text("where you put the Census data")
+      .action((x, c) => c.copy(folder = x))
+    opt[Int]('b', "batchSize")
+      .text("batch size")
+      .action((x, c) => c.copy(batchSize = x))
+    opt[String]("model")
+      .text("model snapshot location")
+      .action((x, c) => c.copy(modelSnapshot = Some(x)))
+    opt[String]("state")
+      .text("state snapshot location")
+      .action((x, c) => c.copy(stateSnapshot = Some(x)))
+    opt[String]("checkpoint")
+      .text("where to cache the model")
+      .action((x, c) => c.copy(checkpoint = Some(x)))
+    opt[Double]('r', "learningRate")
+      .text("learning rate")
+      .action((x, c) => c.copy(learningRate = x))
+    opt[Double]('d', "learningRateDecay")
+      .text("learning rate decay")
+      .action((x, c) => c.copy(learningRateDecay = x))
+    opt[Int]('e', "maxEpoch")
+      .text("epoch numbers")
+      .action((x, c) => c.copy(maxEpoch = x))
+    opt[Int]('b', "batchSize")
+      .text("batch size")
+      .action((x, c) => c.copy(batchSize = x))
+    opt[Unit]("overWrite")
+      .text("overwrite checkpoint files")
+      .action( (_, c) => c.copy(overWriteCheckpoint = true) )
+  }
+
+  case class TestParams(
+    folder: String = "./",
+    model: String = "",
+    batchSize: Int = 128
+  )
+
+  val testParser = new OptionParser[TestParams]("BigDL Lenet Test Example") {
+    opt[String]('f', "folder")
+      .text("where you put the Census data")
+      .action((x, c) => c.copy(folder = x))
+
+    opt[String]("model")
+      .text("model snapshot location")
+      .action((x, c) => c.copy(model = x))
+      .required()
+      .required()
+    opt[Int]('b', "batchSize")
+      .text("batch size")
+      .action((x, c) => c.copy(batchSize = x))
+  }
+
   val AGE = 0
   val WORKCLASS = 1
   val FNLWGT = 2
@@ -71,6 +140,13 @@ object Utils {
     (sth.hashCode() % bucketsize + bucketsize) % bucketsize + start
   }
 
+  /**
+   * Load Train data of Census dataset.
+   *
+   * @param sc spark context
+   * @param featureFile the file name of train data
+   * @return
+   */
   private[bigdl] def loadTrain(sc: SparkContext, featureFile: String): RDD[Sample[Float]] = {
 
     var src: RDD[String] = null
@@ -127,6 +203,13 @@ object Utils {
     results
   }
 
+  /**
+   * Load Test data of Census dataset.
+   *
+   * @param sc spark context
+   * @param featureFile the file name of test data
+   * @return
+   */
   private[bigdl] def loadTest(sc: SparkContext, featureFile: String): RDD[Sample[Float]] = {
 
     var src: RDD[String] = null
