@@ -17,14 +17,13 @@
 package com.intel.analytics.bigdl.models.widedeep
 
 import com.intel.analytics.bigdl.nn.{CrossEntropyCriterion, Module}
-import com.intel.analytics.bigdl._
 import com.intel.analytics.bigdl.optim._
-import com.intel.analytics.bigdl.utils.{Engine, LoggerFilter, T, Table}
+import com.intel.analytics.bigdl.utils.{Engine, LoggerFilter}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
-import com.intel.analytics.bigdl.dataset.DataSet
-import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric._
+import com.intel.analytics.bigdl.dataset.SparseTensorMiniBatch
 import com.intel.analytics.bigdl.numeric.NumericFloat
+import com.intel.analytics.bigdl.tensor.Tensor
 
 object Train {
   LoggerFilter.redirectSparkInfoLogs()
@@ -36,7 +35,7 @@ object Train {
     trainParser.parse(args, new TrainParams()).map(param => {
       val conf = Engine.createSparkConf().setAppName("Wide and Deep Learning on Census")
         // Will throw exception without this config when has only one executor
-        .set("spark.rpc.message.maxSize", "200")
+        .set("spark.rpc.message.maxSize", "1024")
       val sc = new SparkContext(conf)
       Engine.init
 
@@ -51,7 +50,7 @@ object Train {
       val model = if (param.modelSnapshot.isDefined) {
         Module.load[Float](param.modelSnapshot.get)
       } else {
-        WideDeepWithSparse[Float](modelType="wide_n_deep", classNum=2)
+        WideDeepWithSparse[Float](modelType = "wide_n_deep", classNum = 2)
       }
 
       val optimMethod = if (param.stateSnapshot.isDefined) {
@@ -67,7 +66,11 @@ object Train {
         model = model,
         sampleRDD = trainDataSet,
         criterion = new CrossEntropyCriterion[Float](),
-        batchSize = batchSize
+        batchSize = batchSize,
+        miniBatch = new SparseTensorMiniBatch(Array(
+          Tensor.sparse[Float](Array(100), 1),
+          Tensor[Float]()),
+          Array(Tensor[Float]()))
       )
 
       if (param.checkpoint.isDefined) {
@@ -78,7 +81,7 @@ object Train {
         .setOptimMethod(optimMethod)
         .setValidation(Trigger.everyEpoch,
           validateSet, Array(new Top1Accuracy[Float], new Loss[Float]),
-          batchSize=batchSize)
+          batchSize = batchSize)
         .setEndWhen(Trigger.maxEpoch(param.maxEpoch))
         .optimize()
       sc.stop()

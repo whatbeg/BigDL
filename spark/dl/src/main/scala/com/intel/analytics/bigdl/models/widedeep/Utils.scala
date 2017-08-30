@@ -16,7 +16,7 @@
 
 package com.intel.analytics.bigdl.models.widedeep
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.Paths
 
 import com.intel.analytics.bigdl.dataset.{Sample, TensorSample}
 import com.intel.analytics.bigdl.tensor.{Storage, Tensor}
@@ -24,7 +24,6 @@ import com.intel.analytics.bigdl.utils.{File, T}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import scopt.OptionParser
-import scala.io.Source
 
 object Utils {
 
@@ -33,7 +32,7 @@ object Utils {
     checkpoint: Option[String] = None,
     modelSnapshot: Option[String] = None,
     stateSnapshot: Option[String] = None,
-    batchSize: Int = 128,
+    batchSize: Int = 480,
     learningRate: Double = 0.001,
     learningRateDecay: Double = 0.0,
     maxEpoch: Int = 20,
@@ -67,9 +66,6 @@ object Utils {
     opt[Int]('e', "maxEpoch")
       .text("epoch numbers")
       .action((x, c) => c.copy(maxEpoch = x))
-    opt[Int]('b', "batchSize")
-      .text("batch size")
-      .action((x, c) => c.copy(batchSize = x))
     opt[Unit]("overWrite")
       .text("overwrite checkpoint files")
       .action( (_, c) => c.copy(overWriteCheckpoint = true) )
@@ -78,7 +74,7 @@ object Utils {
   case class TestParams(
     folder: String = "./",
     model: String = "",
-    batchSize: Int = 128
+    batchSize: Int = 480
   )
 
   val testParser = new OptionParser[TestParams]("BigDL Lenet Test Example") {
@@ -102,7 +98,7 @@ object Utils {
   val EDUCATION = 3
   val EDUCATION_NUM = 4
   val MARITAL_STATUS = 5
-  val OCCPATION = 6
+  val OCCUPATION = 6
   val RELATIONSHIP = 7
   val RACE = 8
   val GENDER = 9
@@ -166,14 +162,14 @@ object Utils {
       indices(0) = getGender(lis(GENDER), start = 0)                  // 2
       indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
       indices(2) = hashbucket(lis(EDUCATION), 1000) + 1002            // 2002
-      indices(3) = hashbucket(lis(OCCPATION), 1000) + 2002            // 3002
+      indices(3) = hashbucket(lis(OCCUPATION), 1000) + 2002            // 3002
       indices(4) = hashbucket(lis(WORKCLASS), 100) + 3002             // 3102
       indices(5) = hashbucket(lis(RELATIONSHIP), 100) + 3102          // 3202
       indices(6) = getAgeboundaries(lis(AGE), start = 0) + 3202       // 3213
-      indices(7) = hashbucket(lis(EDUCATION) + lis(OCCPATION), 10000) + 3213 // 13213
-      indices(8) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCPATION), 10000) + 13213 // 23213
+      indices(7) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 10000) + 3213 // 13213
+      indices(8) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 10000) + 13213 // 23213
       indices(9) = hashbucket(
-        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCPATION) + 1000000) + 23213
+        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION) + 1000000) + 23213
       // 1023213
       for (k <- 0 until 10) storageArray(k) = 1
 
@@ -223,21 +219,20 @@ object Utils {
 
     val storage = Storage[Float](16)
     val storageArray = storage.array()
-    var i = 0
     val results = iter.map(line => {
       val indices = new Array[Int](16)
       val lis = line.toSeq
       indices(0) = getGender(lis(GENDER), start = 0)                  // 2
       indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
       indices(2) = hashbucket(lis(EDUCATION), 1000) + 1002            // 2002
-      indices(3) = hashbucket(lis(OCCPATION), 1000) + 2002            // 3002
+      indices(3) = hashbucket(lis(OCCUPATION), 1000) + 2002           // 3002
       indices(4) = hashbucket(lis(WORKCLASS), 100) + 3002             // 3102
       indices(5) = hashbucket(lis(RELATIONSHIP), 100) + 3102          // 3202
       indices(6) = getAgeboundaries(lis(AGE), start = 0) + 3202       // 3213
-      indices(7) = hashbucket(lis(EDUCATION) + lis(OCCPATION), 10000) + 3213 // 13213
-      indices(8) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCPATION), 10000) + 13213 // 23213
+      indices(7) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 10000) + 3213 // 13213
+      indices(8) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 10000) + 13213 // 23213
       indices(9) = hashbucket(
-        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCPATION) + 1000000) + 23213
+        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION) + 1000000) + 23213
       // 1023213
       for (k <- 0 until 10) storageArray(k) = 1
 
