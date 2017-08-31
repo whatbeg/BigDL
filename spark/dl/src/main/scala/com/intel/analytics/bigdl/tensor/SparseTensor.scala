@@ -862,8 +862,9 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       var indicesIndex = 0
       while (indicesIndex < numOfIndices) {
         if (i == 0 || indicesIndex == 0) {
-          val storage = Storage[Float](curLength).fill(dimOffset, 0, curLength)
+          val storage = Storage[Int](curLength)
           val storageArray = storage.array()
+          for (j <- 0 until curLength) storageArray(j) = dimOffset
           System.arraycopy(storageArray, 0, res._indices(indicesIndex).array(),
             offset, curLength)
         }
@@ -1962,7 +1963,7 @@ object SparseTensor{
         var i = 1
         while (i <= denseTensor.nElement()) {
           if (denseTensor.valueAt(i) != 0) {
-            indices(0)(sparseIndex) = i
+            indices(0)(sparseIndex) = i - 1
             storageArray(sparseIndex) = denseTensor.valueAt(i)
             sparseIndex += 1
           }
