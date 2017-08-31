@@ -263,7 +263,7 @@ object Utils {
   }
   def toy(): Unit = {
     var s = new Array[Storage[Int]](10)
-    for (elem <- s.length)
+    for (elem <- s.size)
       s(elem) = Storage[Int](1)
     println(s)
   }

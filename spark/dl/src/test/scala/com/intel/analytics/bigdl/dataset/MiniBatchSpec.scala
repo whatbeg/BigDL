@@ -83,4 +83,19 @@ class MiniBatchSpec extends FlatSpec with Matchers {
     miniBatch.slice(3, 1).getTarget() should be (Tensor[Float](1).fill(3))
   }
 
+  "SparseTensorMiniBatch set" should "return right result" in {
+    val a1 = Tensor.sparse(Tensor[Float](4).range(1, 4, 1))
+    val a2 = Tensor.sparse(Tensor[Float](4).range(5, 8, 1))
+    val b1 = Tensor[Float](5).range(1, 5, 1)
+    val b2 = Tensor[Float](5).range(6, 10, 1)
+    val c1 = Tensor[Float](1).fill(1)
+    val c2 = Tensor[Float](1).fill(0)
+    val sample1 = TensorSample[Float](Array(a1, b1), Array(c1))
+    val sample2 = TensorSample[Float](Array(a2, b2), Array(c2))
+    val miniBatch = new SparseTensorMiniBatch[Float](Array(Tensor.sparse(Array(4), 1), Tensor(5)),
+      Array(Tensor(1)))
+    miniBatch.set(Array(sample1, sample2))
+    println(miniBatch.size())
+  }
+
 }
