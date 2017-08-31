@@ -31,6 +31,20 @@ class SparseTensorSpec  extends FlatSpec with Matchers {
     Tensor.dense(result) should be (expectedResult)
   }
 
+  "concat" should "return right result on dim-1 concatenation 2" in {
+    val sTensor1 = Tensor.sparse(Tensor(3).setValue(2, 1))
+    val sTensor2 = Tensor.sparse(Tensor(3).setValue(3, 3))
+    val sTensor3 = Tensor.sparse(Tensor(3).setValue(1, 2))
+    val result = Tensor.sparse(Array(3, 3), 6)
+    result.concat(1, Array(sTensor1, sTensor2, sTensor3), result)
+    println(result)
+    val expectedResult = Tensor(3, 3)
+    expectedResult.setValue(1, 2, 1)
+    expectedResult.setValue(2, 3, 3)
+    expectedResult.setValue(3, 1, 2)
+    Tensor.dense(result) should be (expectedResult)
+  }
+
   "concat" should "return right result" in {
     val sTensor1 = Tensor.sparse(Tensor(3, 3).range(1, 9, 1))
     val sTensor2 = Tensor.sparse(Tensor(3, 2).range(10, 15, 1))
@@ -89,8 +103,8 @@ class SparseTensorSpec  extends FlatSpec with Matchers {
     result.concat(1, Array(sTensor1, sTensor2, sTensor3), result)
     val exceptedResult = Tensor(7, 3)
     exceptedResult.setValue(1, 1, 1)
-    exceptedResult.setValue(4, 2, 2)
-    exceptedResult.setValue(7, 1, 3)
+    exceptedResult.setValue(3, 2, 2)
+    exceptedResult.setValue(6, 1, 3)
     Tensor.dense(result) should be (exceptedResult)
   }
 }
