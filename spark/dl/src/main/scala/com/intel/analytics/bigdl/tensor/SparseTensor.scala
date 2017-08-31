@@ -809,13 +809,11 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       res: Tensor[T]): Tensor[T] = {
     require(dim == 1 || dim == 2)
     var size = tensors.head.size()
-    require(size.length <= 2, "Dimension larger than 2 are not supported yet!")
+    require(size.length == 2)
     tensors.foreach{tensor =>
       // todo: check size
       require(tensor.isInstanceOf[SparseTensor[T]])
       require(tensor.dim() == size.length)
-      // check size
-      for (dims <- 0 until tensor.dim()) require(tensor.size(dims + 1) == size(dims))
     }
     val flag = if (size.length == 1 && dim == 1) true else false
     if (flag) size = Array(1) ++ size
@@ -856,6 +854,7 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       val currentTensor = tensors(i)
       val curLength = currentTensor.nElement()
       val curTensorOffset = currentTensor.storageOffset() - 1
+      println("Curlength, curTensorOffset = " + curLength + " " + curTensorOffset)
       // copy to concat _values
       ev.arraycopy(currentTensor.storage().array(), curTensorOffset,
         res.storage().array(), offset, curLength)
@@ -1960,8 +1959,8 @@ object SparseTensor{
     denseTensor.dim() match {
       case 1 =>
         var sparseIndex = 0
-        var i = 0
-        while (i < denseTensor.nElement()) {
+        var i = 1
+        while (i <= denseTensor.nElement()) {
           if (denseTensor.valueAt(i) != 0) {
             indices(0)(sparseIndex) = i
             storageArray(sparseIndex) = denseTensor.valueAt(i)
