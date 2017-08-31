@@ -852,7 +852,8 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       val currentTensor = tensors(i)
       val curLength = currentTensor.nElement()
       val curTensorOffset = currentTensor.storageOffset() - 1
-      // println("Curlength, curTensorOffset = " + curLength + " " + curTensorOffset)
+      println("Curlength, curTensorOffset, offset = " + curLength
+        + " " + curTensorOffset + " " + offset)
       // copy to concat _values
       ev.arraycopy(currentTensor.storage().array(), curTensorOffset,
         res.storage().array(), offset, curLength)

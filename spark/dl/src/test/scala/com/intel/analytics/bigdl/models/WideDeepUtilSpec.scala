@@ -18,20 +18,15 @@ package com.intel.analytics.bigdl.models
 
 import java.io.File
 
+import com.intel.analytics.bigdl.dataset.TensorSample
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import com.intel.analytics.bigdl.tensor.{DenseTensor, Tensor}
+import com.intel.analytics.bigdl.tensor.{SparseTensor, DenseTensor, Storage, Tensor}
 import com.intel.analytics.bigdl.utils.{Engine, T}
 import org.apache.spark.{SparkConf, SparkContext}
+import com.intel.analytics.bigdl.models.widedeep.Utils._
 
 
 class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
-  var sc: SparkContext = null
-  val nodeNumber = 1
-  val coreNumber = 1
-
-  Engine.init(nodeNumber, coreNumber, true)
-  val conf = new SparkConf().setMaster("local[1]").setAppName("WideDeepUtilSpec")
-  sc = new SparkContext(conf)
 
   private def processPath(path: String): String = {
     if (path.contains(":")) {
@@ -41,12 +36,23 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
     }
   }
 
-  val resource = getClass().getClassLoader().getResource("wide_deep")
+  "loadTrain" should "get right shape" in {
+    var sc: SparkContext = null
+    val nodeNumber = 1
+    val coreNumber = 1
 
-  val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.loadTrain(sc,
-    processPath(resource.getPath()) + File.separator + "train.data")
+    Engine.init(nodeNumber, coreNumber, true)
+    val conf = new SparkConf().setMaster("local[1]").setAppName("WideDeepUtilSpec")
+    sc = new SparkContext(conf)
 
-  assert (dataSet.count() == 32561)
+    val resource = getClass().getClassLoader().getResource("wide_deep")
 
-  sc.stop()
+    val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.loadTrain(sc,
+      processPath(resource.getPath()) + File.separator + "train.data")
+
+    dataSet.count() should be (32561)
+
+    sc.stop()
+  }
+
 }

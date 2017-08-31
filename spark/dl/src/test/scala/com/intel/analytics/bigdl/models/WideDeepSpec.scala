@@ -110,9 +110,8 @@ class WideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
     val b = model.getParametersTable()
 
     sparseModel.getParameters()._2.equals(model.getParameters()._2) shouldEqual true
-    // parameters of sparse model should equal to parameters of dense model
 
-    output shouldEqual sparseOutput  // dense output should equal to sparse output
+    output shouldEqual sparseOutput
   }
 
 }
