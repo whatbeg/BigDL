@@ -52,7 +52,7 @@ class SparseLinear[T: ClassTag](
     if (addBuffer.nElement() != nFrame) {
       addBuffer.resize(Array(nFrame)).fill(ev.one)
     }
-    // SparseTensorBLAS.comm(alpha, mat1, mat2, beta, result)
+
     SparseTensorBLAS.coomm(ev.one, input, weight.t, ev.zero, output)
     if (withBias) output.addr(ev.one, addBuffer, bias)
     output
