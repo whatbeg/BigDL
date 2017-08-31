@@ -809,7 +809,7 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       res: Tensor[T]): Tensor[T] = {
     require(dim == 1 || dim == 2)
     var size = tensors.head.size()
-    require(size.length == 2)
+    require(size.length <= 2, "Dimension larger than 2 are not supported yet!")
     tensors.foreach{tensor =>
       // todo: check size
       require(tensor.isInstanceOf[SparseTensor[T]])
@@ -848,7 +848,7 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       tensors: Seq[SparseTensor[T]],
       res: SparseTensor[T]): Tensor[T] = {
     val numOfIndices = res.dim()  // usually is 2
-    require(tensors.head.dim() == 1 && dim == 1, "Not suitable for this interface.")
+    require(tensors.head.dim() == 1, "Not suitable for this interface.")
     var i, offset, dimOffset = 0
     while (i < tensors.length) {
       val currentTensor = tensors(i)
