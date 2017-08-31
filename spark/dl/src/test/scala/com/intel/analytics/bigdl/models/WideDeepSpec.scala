@@ -111,6 +111,7 @@ class WideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
 
     sparseModel.getParameters()._2.equals(model.getParameters()._2) shouldEqual true
 
+
     output shouldEqual sparseOutput
   }
 
