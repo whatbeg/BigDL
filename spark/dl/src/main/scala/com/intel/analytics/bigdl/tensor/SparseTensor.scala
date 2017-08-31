@@ -854,21 +854,21 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       val currentTensor = tensors(i)
       val curLength = currentTensor.nElement()
       val curTensorOffset = currentTensor.storageOffset() - 1
-      println("Curlength, curTensorOffset = " + curLength + " " + curTensorOffset)
+      // println("Curlength, curTensorOffset = " + curLength + " " + curTensorOffset)
       // copy to concat _values
       ev.arraycopy(currentTensor.storage().array(), curTensorOffset,
         res.storage().array(), offset, curLength)
       // make new Indices
       var indicesIndex = 0
       while (indicesIndex < numOfIndices) {
-        if (i == 0 || indicesIndex == 0) {
+        if (indicesIndex == 0) {
           val storage = Storage[Int](curLength)
           val storageArray = storage.array()
           for (j <- 0 until curLength) storageArray(j) = dimOffset
           System.arraycopy(storageArray, 0, res._indices(indicesIndex).array(),
             offset, curLength)
         }
-        else if (indicesIndex != 0) {
+        else {
           // copy directly
           System.arraycopy(currentTensor._indices(indicesIndex - 1).array(),
             curTensorOffset, res._indices(indicesIndex).array(),

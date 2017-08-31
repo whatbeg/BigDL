@@ -35,7 +35,7 @@ class SparseTensorSpec  extends FlatSpec with Matchers {
     val sTensor1 = Tensor.sparse(Tensor(3).setValue(2, 1))
     val sTensor2 = Tensor.sparse(Tensor(3).setValue(3, 3))
     val sTensor3 = Tensor.sparse(Tensor(3).setValue(1, 2))
-    val result = Tensor.sparse(Array(3, 3), 6)
+    val result = Tensor.sparse(Array(3, 3), 3)
     result.concat(1, Array(sTensor1, sTensor2, sTensor3), result)
     println(result)
     val expectedResult = Tensor(3, 3)
