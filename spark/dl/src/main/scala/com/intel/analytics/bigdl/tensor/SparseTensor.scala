@@ -524,9 +524,7 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
   override def narrow(dim: Int, index: Int, size: Int): Tensor[T] = {
     require(dim <= nDimension)
     dim match {
-//      case 1 =>
-//        this
-
+        // todo: add offset to avoid copy.
       case _ =>
         val _index = index - 1
         val dimIndices = _indices (dim - 1)
