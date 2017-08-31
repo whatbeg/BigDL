@@ -789,7 +789,9 @@ override def getTensorNumeric(): TensorNumeric[T] = {
         _indices = _indices.slice(0, size.length)
         _indices.foreach(_.resize(nElement))
       } else {
-        _indices ++= new Array[Storage[Int]](size.length - _indices.length)
+        val _addIndices = new Array[Storage[Int]](size.length - _indices.length)
+        for (i <- _addIndices.indices) _addIndices(i) = Storage[Int](nElement)
+        _indices ++= _addIndices
         _indices.foreach(_.resize(nElement))
       }
       _storageOffset = 0
@@ -852,8 +854,8 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       val currentTensor = tensors(i)
       val curLength = currentTensor.nElement()
       val curTensorOffset = currentTensor.storageOffset() - 1
-      println("Curlength, curTensorOffset, offset = " + curLength
-        + " " + curTensorOffset + " " + offset)
+//      println("Curlength, curTensorOffset, offset = " + curLength
+//        + " " + curTensorOffset + " " + offset)
       // copy to concat _values
       ev.arraycopy(currentTensor.storage().array(), curTensorOffset,
         res.storage().array(), offset, curLength)
