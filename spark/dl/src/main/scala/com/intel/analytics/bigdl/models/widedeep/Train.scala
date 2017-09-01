@@ -44,8 +44,8 @@ object Train {
       val trainData = param.folder + "/train.data"
       val testData = param.folder + "/test.data"
 
-      val trainDataSet = loadTrain(sc, trainData)
-      val validateSet = loadTest(sc, testData)
+      val trainDataSet = load(sc, trainData, "Train")
+      val validateSet = load(sc, testData, "Test")
 
       val model = if (param.modelSnapshot.isDefined) {
         Module.load[Float](param.modelSnapshot.get)

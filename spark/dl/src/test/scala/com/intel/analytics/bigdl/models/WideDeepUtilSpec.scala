@@ -54,5 +54,5 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
 
     sc.stop()
   }
-  toy()
+
 }

@@ -137,13 +137,15 @@ object Utils {
   }
 
   /**
-   * Load Train data of Census dataset.
+   * Load data of Census dataset.
    *
    * @param sc spark context
    * @param featureFile the file name of train data
+   * @param tag "Train" or "Test", represents train data or test data
    * @return
    */
-  private[bigdl] def loadTrain(sc: SparkContext, featureFile: String): RDD[Sample[Float]] = {
+  private[bigdl] def load(sc: SparkContext,
+    featureFile: String, tag: String = "Train"): RDD[Sample[Float]] = {
 
     var src: RDD[String] = null
     if (featureFile.startsWith(File.hdfsPrefix)) {
@@ -151,13 +153,15 @@ object Utils {
     } else {
       src = sc.textFile(Paths.get(featureFile).toString)
     }
-    val iter = src.filter(s => (s.length > 0)).map(_.stripMargin.split(","))
-    // println(iter)
-    val storage = Storage[Float](16)
+    val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.stripMargin.split(","))
+    else src.filter(s => (s != "|1x3 Cross validator" && s.length > 0))
+      .map(_.stripMargin.split(","))
+
+    val storage = Storage[Float](10)
     val storageArray = storage.array()
     var i = 0
     val results = iter.map(line => {
-      val indices = new Array[Int](16)
+      val indices = new Array[Int](10)
       val lis = line.toSeq
       indices(0) = getGender(lis(GENDER), start = 0)                  // 2
       indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
@@ -173,70 +177,7 @@ object Utils {
       // 1023213
       for (k <- 0 until 10) storageArray(k) = 1
 
-      indices(10) = 1023213  // workclass
-      indices(11) = 1023214  // education
-      indices(12) = 1023215  // gender
-      indices(13) = 1023216  // relationship
-      indices(14) = 1023217  // native_country
-      indices(15) = 1023218  // occupation
-
-      storageArray(10) = indices(4) + 1
-      storageArray(11) = indices(2) + 1
-      storageArray(12) = indices(0) + 1
-      storageArray(13) = indices(5) + 1
-      storageArray(14) = indices(1) + 1
-      storageArray(15) = indices(3) + 1
-
-      val sps = Tensor.sparse(Array(indices), storage, Array(1023219), 1)
-      val den = Tensor[Float](T(lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat,
-        lis(CAPITAL_GAIN).toFloat, lis(CAPITAL_LOSS).toFloat,
-        lis(HOURS_PER_WEEK).toFloat))
-      val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(1.0f))
-                        else Tensor[Float](T(0.0f))
-
-      TensorSample[Float](Array(sps, den), Array(train_label))
-    })
-    results
-  }
-
-  /**
-   * Load Test data of Census dataset.
-   *
-   * @param sc spark context
-   * @param featureFile the file name of test data
-   * @return
-   */
-  private[bigdl] def loadTest(sc: SparkContext, featureFile: String): RDD[Sample[Float]] = {
-
-    var src: RDD[String] = null
-    if (featureFile.startsWith(File.hdfsPrefix)) {
-      src = sc.textFile(featureFile)
-    } else {
-      src = sc.textFile(Paths.get(featureFile).toString)
-    }
-    val iter = src.filter(s => (s != "|1x3 Cross validator" && s.length > 0))
-      .map(_.stripMargin.split(","))
-
-    val storage = Storage[Float](10)
-    val storageArray = storage.array()
-    val results = iter.map(line => {
-      val indices = new Array[Int](10)
-      val lis = line.toSeq
-      indices(0) = getGender(lis(GENDER), start = 0)                             // 2
-      indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
-      indices(2) = hashbucket(lis(EDUCATION), 1000) + 1002            // 2002
-      indices(3) = hashbucket(lis(OCCUPATION), 1000) + 2002           // 3002
-      indices(4) = hashbucket(lis(WORKCLASS), 100) + 3002             // 3102
-      indices(5) = hashbucket(lis(RELATIONSHIP), 100) + 3102          // 3202
-      indices(6) = getAgeboundaries(lis(AGE), start = 0) + 3202       // 3213
-      indices(7) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 10000) + 3213 // 13213
-      indices(8) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 10000) + 13213 // 23213
-      indices(9) = hashbucket(
-        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION) + 1000000) + 23213
-      // 1023213
-      for (k <- 0 until 10) storageArray(k) = 1
-
-      val sps = Tensor.sparse(Array(indices), storage, Array(1023219), 1)
+      val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 1)
       val den = Tensor[Float](T(
         hashbucket(lis(WORKCLASS), 100, 1),
         hashbucket(lis(EDUCATION), 1000, 1),
@@ -247,16 +188,11 @@ object Utils {
         lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
         lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
       val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(1.0f))
-      else Tensor[Float](T(0.0f))
+                        else Tensor[Float](T(0.0f))
 
       TensorSample[Float](Array(sps, den), Array(train_label))
     })
     results
   }
-  def toy(): Unit = {
-    var s = new Array[Storage[Int]](10)
-    for (elem <- s.indices)
-      s(elem) = Storage[Int](1)
-    println(s)
-  }
+
 }
