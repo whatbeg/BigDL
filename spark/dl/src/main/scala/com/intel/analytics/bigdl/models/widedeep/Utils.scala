@@ -180,12 +180,12 @@ object Utils {
       indices(14) = 1023217  // native_country
       indices(15) = 1023218  // occupation
 
-      storageArray(10) = indices(4)
-      storageArray(11) = indices(2)
-      storageArray(12) = indices(0)
-      storageArray(13) = indices(5)
-      storageArray(14) = indices(1)
-      storageArray(15) = indices(3)
+      storageArray(10) = indices(4) + 1
+      storageArray(11) = indices(2) + 1
+      storageArray(12) = indices(0) + 1
+      storageArray(13) = indices(5) + 1
+      storageArray(14) = indices(1) + 1
+      storageArray(15) = indices(3) + 1
 
       val sps = Tensor.sparse(Array(indices), storage, Array(1023219), 1)
       val den = Tensor[Float](T(lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat,
