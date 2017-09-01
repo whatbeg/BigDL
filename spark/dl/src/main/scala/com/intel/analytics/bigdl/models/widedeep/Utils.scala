@@ -222,7 +222,7 @@ object Utils {
     val results = iter.map(line => {
       val indices = new Array[Int](16)
       val lis = line.toSeq
-      indices(0) = getGender(lis(GENDER), start = 0)                  // 2
+      indices(0) = getGender(lis(GENDER), start = 0)                             // 2
       indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
       indices(2) = hashbucket(lis(EDUCATION), 1000) + 1002            // 2002
       indices(3) = hashbucket(lis(OCCUPATION), 1000) + 2002           // 3002
@@ -237,11 +237,15 @@ object Utils {
       for (k <- 0 until 10) storageArray(k) = 1
 
       val sps = Tensor.sparse(Array(indices), storage, Array(1023219), 1)
-      val den = Tensor[Float](T(indices(4) + 1, indices(2) + 1, indices(0) + 1,
-        indices(5) + 1, indices(1) + 1, indices(3) + 1,
-        lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat,
-        lis(CAPITAL_GAIN).toFloat, lis(CAPITAL_LOSS).toFloat,
-        lis(HOURS_PER_WEEK).toFloat))
+      val den = Tensor[Float](T(
+        hashbucket(lis(WORKCLASS), 100, 1),
+        hashbucket(lis(EDUCATION), 1000, 1),
+        indices(0) + 1,
+        hashbucket(lis(RELATIONSHIP), 100, 1),
+        hashbucket(lis(NATIVE_COUNTRY), 1000, 1),
+        hashbucket(lis(OCCUPATION), 1000, 1),
+        lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
+        lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
       val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(1.0f))
       else Tensor[Float](T(0.0f))
 
