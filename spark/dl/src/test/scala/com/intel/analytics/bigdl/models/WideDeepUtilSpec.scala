@@ -36,7 +36,7 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
     }
   }
 
-  "loadTrain" should "get right shape" in {
+  "load Train data" should "get right shape" in {
     var sc: SparkContext = null
     val nodeNumber = 1
     val coreNumber = 1
@@ -47,8 +47,8 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
 
     val resource = getClass().getClassLoader().getResource("wide_deep")
 
-    val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.loadTrain(sc,
-      processPath(resource.getPath()) + File.separator + "train.data")
+    val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.load(sc,
+      processPath(resource.getPath()) + File.separator + "train.data", "Train")
 
     dataSet.count() should be (32561)
 
