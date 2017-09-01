@@ -179,12 +179,12 @@ object Utils {
 
       val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 1)
       val den = Tensor[Float](T(
-        hashbucket(lis(WORKCLASS), 100, 1),
-        hashbucket(lis(EDUCATION), 1000, 1),
-        indices(0) + 1,
-        hashbucket(lis(RELATIONSHIP), 100, 1),
-        hashbucket(lis(NATIVE_COUNTRY), 1000, 1),
-        hashbucket(lis(OCCUPATION), 1000, 1),
+        hashbucket(lis(WORKCLASS), 100, 1).toFloat,
+        hashbucket(lis(EDUCATION), 1000, 1).toFloat,
+        (indices(0) + 1).toFloat,
+        hashbucket(lis(RELATIONSHIP), 100, 1).toFloat,
+        hashbucket(lis(NATIVE_COUNTRY), 1000, 1).toFloat,
+        hashbucket(lis(OCCUPATION), 1000, 1).toFloat,
         lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
         lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
       val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(1.0f))
