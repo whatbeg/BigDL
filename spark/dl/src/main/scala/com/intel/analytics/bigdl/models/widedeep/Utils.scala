@@ -159,7 +159,6 @@ object Utils {
 
     val storage = Storage[Float](10)
     val storageArray = storage.array()
-    var i = 0
     val results = iter.map(line => {
       val indices = new Array[Int](10)
       val lis = line.toSeq
@@ -173,18 +172,18 @@ object Utils {
       indices(7) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 10000) + 3213 // 13213
       indices(8) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 10000) + 13213 // 23213
       indices(9) = hashbucket(
-        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION) + 1000000) + 23213
+        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION), 1000000) + 23213
       // 1023213
       for (k <- 0 until 10) storageArray(k) = 1
 
       val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 1)
       val den = Tensor[Float](T(
-        hashbucket(lis(WORKCLASS), 100, 1).toFloat,
-        hashbucket(lis(EDUCATION), 1000, 1).toFloat,
-        (indices(0) + 1).toFloat,
-        hashbucket(lis(RELATIONSHIP), 100, 1).toFloat,
-        hashbucket(lis(NATIVE_COUNTRY), 1000, 1).toFloat,
-        hashbucket(lis(OCCUPATION), 1000, 1).toFloat,
+        hashbucket(lis(WORKCLASS), 100, 1).toFloat,         // workclass
+        hashbucket(lis(EDUCATION), 1000, 1).toFloat,        // education
+        (indices(0) + 1).toFloat,                           // gender
+        hashbucket(lis(RELATIONSHIP), 100, 1).toFloat,      // relationship
+        hashbucket(lis(NATIVE_COUNTRY), 1000, 1).toFloat,   // native_country
+        hashbucket(lis(OCCUPATION), 1000, 1).toFloat,       // occupation
         lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
         lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
       val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(1.0f))
