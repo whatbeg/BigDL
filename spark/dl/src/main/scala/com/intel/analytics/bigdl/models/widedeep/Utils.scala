@@ -236,22 +236,10 @@ object Utils {
       // 1023213
       for (k <- 0 until 10) storageArray(k) = 1
 
-      indices(10) = 1023213  // workclass
-      indices(11) = 1023214  // education
-      indices(12) = 1023215  // gender
-      indices(13) = 1023216  // relationship
-      indices(14) = 1023217  // native_country
-      indices(15) = 1023218  // occupation
-
-      storageArray(10) = indices(4)
-      storageArray(11) = indices(2)
-      storageArray(12) = indices(0)
-      storageArray(13) = indices(5)
-      storageArray(14) = indices(1)
-      storageArray(15) = indices(3)
-
       val sps = Tensor.sparse(Array(indices), storage, Array(1023219), 1)
-      val den = Tensor[Float](T(lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat,
+      val den = Tensor[Float](T(indices(4), indices(2), indices(0),
+        indices(5), indices(1), indices(3),
+        lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat,
         lis(CAPITAL_GAIN).toFloat, lis(CAPITAL_LOSS).toFloat,
         lis(HOURS_PER_WEEK).toFloat))
       val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(1.0f))

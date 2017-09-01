@@ -68,8 +68,8 @@ object Train {
         criterion = new CrossEntropyCriterion[Float](),
         batchSize = batchSize,
         miniBatch = new SparseTensorMiniBatch[Float](Array(
-          Tensor.sparse(Array(1023219), 1),
-          Tensor(5)),
+          Tensor.sparse(Array(1023213), 1),
+          Tensor(11)),
           Array(Tensor(1)))
       )
 
