@@ -67,10 +67,10 @@ object Train {
         sampleRDD = trainDataSet,
         criterion = new CrossEntropyCriterion[Float](),
         batchSize = batchSize,
-        miniBatch = new SparseTensorMiniBatch(Array(
-          Tensor.sparse[Float](Array(1023219), 1),
-          Tensor[Float](5)),
-          Array(Tensor[Float]()))
+        miniBatch = new SparseTensorMiniBatch[Float](Array(
+          Tensor.sparse(Array(1023219), 1),
+          Tensor(5)),
+          Array(Tensor(1)))
       )
 
       if (param.checkpoint.isDefined) {

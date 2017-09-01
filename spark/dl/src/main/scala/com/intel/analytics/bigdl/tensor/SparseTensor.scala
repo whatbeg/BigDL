@@ -827,6 +827,7 @@ override def getTensorNumeric(): TensorNumeric[T] = {
     val result = if (null == res) {
       SparseTensor(size, totalLength)
     } else {
+      for (elem <- size) println(elem)
       res.resize(size, totalLength).asInstanceOf[SparseTensor[T]]
     }
     if (flag) {
