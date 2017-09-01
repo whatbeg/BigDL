@@ -237,8 +237,8 @@ object Utils {
       for (k <- 0 until 10) storageArray(k) = 1
 
       val sps = Tensor.sparse(Array(indices), storage, Array(1023219), 1)
-      val den = Tensor[Float](T(indices(4), indices(2), indices(0),
-        indices(5), indices(1), indices(3),
+      val den = Tensor[Float](T(indices(4) + 1, indices(2) + 1, indices(0) + 1,
+        indices(5) + 1, indices(1) + 1, indices(3) + 1,
         lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat,
         lis(CAPITAL_GAIN).toFloat, lis(CAPITAL_LOSS).toFloat,
         lis(HOURS_PER_WEEK).toFloat))
