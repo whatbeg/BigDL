@@ -71,7 +71,7 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
       processPath(resource.getPath()) + File.separator + "train.data", "Train")
 
     val input = dataSet.take(1)
-    val sparseModel = WideDeepWithSparse("wide_n_deep", 2)
+    val sparseModel = WideDeepWithSparse[Float]("wide_n_deep", 2)
     val sps = input(0)
     val den = input(1)
     sparseModel.forward(T(sps, den))
