@@ -1911,6 +1911,22 @@ override def exp(): Tensor[T] = {
       this._nElement == other._nElement
   }
 
+  override def toString(): String = {
+    this.nDimension match {
+      case 0 => s"[${this.getClass.getName} with no dimension]"
+      case 1 =>
+        val sb = new StringBuilder
+        val indices = _indices
+        val values = _values
+        for (i <- 0 until this.nElement)
+          sb.append(indices(i) + ":" + values(i)).append('\n')
+
+        s"${sb}[${this.getClass.getName} of size ${this.size(1)}]"
+      case 2 =>
+        throw new UnsupportedOperationException(s"Unimplemented")
+    }
+  }
+
   override def hashCode(): Int = {
     val state = Seq(indices_order, _indices, _values, _storageOffset, _nElement, _shape, nDimension)
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
