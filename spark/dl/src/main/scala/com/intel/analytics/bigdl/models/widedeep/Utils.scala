@@ -176,7 +176,7 @@ object Utils {
       // 1023213
       for (k <- 0 until 10) storageArray(k) = 1
 
-      val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 1)
+      val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 10)
       val den = Tensor[Float](T(
         hashbucket(lis(WORKCLASS), 100, 1).toFloat,         // workclass
         hashbucket(lis(EDUCATION), 1000, 1).toFloat,        // education
@@ -225,7 +225,7 @@ object Utils {
       // 1023213
       for (k <- 0 until 10) storageArray(k) = 1
 
-      val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 1)
+      val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 10)
       val den = Tensor[Float](T(
         hashbucket(lis(WORKCLASS), 100, 1).toFloat,         // workclass
         hashbucket(lis(EDUCATION), 1000, 1).toFloat,        // education

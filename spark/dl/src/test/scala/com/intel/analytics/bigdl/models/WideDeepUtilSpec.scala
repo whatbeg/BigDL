@@ -37,24 +37,6 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
     }
   }
 
-  "load Train data" should "get right shape" in {
-    var sc: SparkContext = null
-    val nodeNumber = 1
-    val coreNumber = 1
-
-    Engine.init(nodeNumber, coreNumber, true)
-    val conf = new SparkConf().setMaster("local[1]").setAppName("WideDeepUtilSpec")
-    sc = new SparkContext(conf)
-
-    val resource = getClass().getClassLoader().getResource("wide_deep")
-
-    val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.load(sc,
-      processPath(resource.getPath()) + File.separator + "train.data", "Train")
-
-    dataSet.count() should be (32561)
-
-    sc.stop()
-  }
 
   "foward" should "get through" in {
     var sc: SparkContext = null
@@ -72,10 +54,12 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
 
     val input = dataSet.take(1)
     val sparseModel = WideDeepWithSparse[Float]("wide_n_deep", 2)
+    println(input)
+    println(input.size)
     val sps = input(0)
     val den = input(1)
-    sparseModel.forward(T(sps, den))
-    
+    val sparseOutput = sparseModel.forward(T(sps, den))
+    println(sparseOutput.toTensor[Float])
     sc.stop()
   }
 
