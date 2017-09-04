@@ -501,7 +501,17 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return
    */
   override def set(): Tensor[T] = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    if (this._indices != null) {
+      for (ind <- this._indices)
+          ind.resize(0)
+    }
+    if (this._values != null) {
+      this._values.resize(0)
+    }
+    this._nElement = 0
+    this._storageOffset = 0
+    this._shape = Array()
+    this
   }
 
   /**
