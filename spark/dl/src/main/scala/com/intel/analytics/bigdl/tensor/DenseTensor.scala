@@ -1922,7 +1922,7 @@ private[tensor] class DenseTensor[@specialized(Float, Double) T: ClassTag](
     val result = if (res == null) {
       Tensor(size)
     } else {
-      res.resize(size)
+      res
     }
 
     i = 0
