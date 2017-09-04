@@ -1919,10 +1919,18 @@ override def exp(): Tensor[T] = {
         val indices = _indices
         val values = _values
         for (i <- 0 until this.nElement)
-          sb.append(indices(i) + ":" + values(i)).append('\n')
+          sb.append(indices(0)(i) + " : " + values(i)).append('\n')
 
         s"${sb}[${this.getClass.getName} of size ${this.size(1)}]"
       case 2 =>
+        val sb = new StringBuilder
+        val indices = _indices
+        val values = _values
+        for (i <- 0 until this.nElement)
+          sb.append("(" + indices(0)(i) + ", " + indices(1)(i) + ") : " + values(i)).append('\n')
+
+        s"${sb}[${this.getClass.getName} of size ${this.size(1)}x${this.size(2)}]"
+      case _ =>
         throw new UnsupportedOperationException(s"Unimplemented")
     }
   }

@@ -24,6 +24,7 @@ import com.intel.analytics.bigdl.tensor.{SparseTensor, DenseTensor, Storage, Ten
 import com.intel.analytics.bigdl.models.widedeep.{WideDeep, WideDeepWithSparse}
 import com.intel.analytics.bigdl.utils.{Engine, T}
 import org.apache.spark.{SparkConf, SparkContext}
+import com.intel.analytics.bigdl.tensor._
 import com.intel.analytics.bigdl.models.widedeep.Utils._
 
 
@@ -52,13 +53,15 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
     val dataSet = com.intel.analytics.bigdl.models.widedeep.Utils.load2(sc,
       processPath(resource.getPath()) + File.separator + "train.data", "Train")
 
-    val input = dataSet.take(1)(0)
+    val input = dataSet.take(2)
     val sparseModel = WideDeepWithSparse[Float]("wide_n_deep", 2)
     println(input)
     println(input.size)
-    val sps = input(0)
-    val den = input(1)
-    val sparseOutput = sparseModel.forward(T(sps, den))
+    val sps_result = Tensor.sparse(Array(2, 1023213), 15)
+    sps_result.concat(1, T(input(0)(0), input(1)(0)), sps_result)
+    val den_result = Tensor(2, 11)
+    den_result.concat(1, T(input(0)(1), input(1)(1)), den_result)
+    val sparseOutput = sparseModel.forward(T(sps_result, den_result))
     println(sparseOutput.toTensor[Float])
     sc.stop()
   }
