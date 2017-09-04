@@ -69,7 +69,7 @@ object Train {
         batchSize = batchSize,
         miniBatch = new SparseTensorMiniBatch[Float](Array(
           Tensor.sparse(Array(1023213), 1),
-          Tensor(11)),
+          Tensor(1, 11)),
           Array(Tensor(1)))
       )
 

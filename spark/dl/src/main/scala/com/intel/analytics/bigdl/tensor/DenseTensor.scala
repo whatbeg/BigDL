@@ -1922,15 +1922,14 @@ private[tensor] class DenseTensor[@specialized(Float, Double) T: ClassTag](
     val result = if (res == null) {
       Tensor(size)
     } else {
-      res
+      res.resize(size)
     }
 
     i = 0
     var offset = 1
     while (i < tensors.length) {
       val current = tensors(i)
-      val _size = if (current.dim() == 1 && res.dim() == 2) 1 else current.size(dim)
-      val target = result.narrow(dim, offset, _size)
+      val target = result.narrow(dim, offset, current.size(dim))
 
       if (target.isContiguous() || dim > 2) {
         // Copy directly when target is Contiguous or dimension is larger than 2
