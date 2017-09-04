@@ -186,8 +186,9 @@ object Utils {
         hashbucket(lis(OCCUPATION), 1000, 1).toFloat,       // occupation
         lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
         lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
-      val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(1.0f))
-                        else Tensor[Float](T(0.0f))
+      den.resize(1, 11)
+      val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(2.0f))
+                        else Tensor[Float](T(1.0f))
 
       TensorSample[Float](Array(sps, den), Array(train_label))
     })
@@ -236,8 +237,8 @@ object Utils {
         lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
         lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
       den.resize(1, 11)
-      val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(1.0f))
-      else Tensor[Float](T(0.0f))
+      val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(2.0f))
+      else Tensor[Float](T(1.0f))
       Array(sps, den)
     })
     results
