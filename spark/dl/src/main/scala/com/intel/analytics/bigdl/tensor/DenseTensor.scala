@@ -1912,6 +1912,10 @@ private[tensor] class DenseTensor[@specialized(Float, Double) T: ClassTag](
   override def concat(
       dim: Int,
       tensors: Seq[Tensor[T]], res: Tensor[T] = null): Tensor[T] = {
+    if (res != null && tensors.head.dim() != res.dim()) {
+      for (i <- tensors.indices)
+        tensors(i).resize(Array(1) ++ res.size())
+    }
     val size = tensors.head.size()
     var i = 1
     while (i < tensors.length) {
@@ -1922,7 +1926,7 @@ private[tensor] class DenseTensor[@specialized(Float, Double) T: ClassTag](
     val result = if (res == null) {
       Tensor(size)
     } else {
-      res.resize(size)
+      res
     }
 
     i = 0
