@@ -81,7 +81,11 @@ object Train {
         .setOptimMethod(optimMethod)
         .setValidation(Trigger.everyEpoch,
           validateSet, Array(new Top1Accuracy[Float], new Loss[Float]),
-          batchSize = batchSize)
+          batchSize = batchSize,
+          miniBatch = new SparseTensorMiniBatch[Float](Array(
+            Tensor.sparse(Array(1023213), 1),
+            Tensor(1, 11)),
+            Array(Tensor(1))))
         .setEndWhen(Trigger.maxEpoch(param.maxEpoch))
         .optimize()
       sc.stop()
