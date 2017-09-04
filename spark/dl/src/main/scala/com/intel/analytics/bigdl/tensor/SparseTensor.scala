@@ -827,7 +827,6 @@ override def getTensorNumeric(): TensorNumeric[T] = {
     val result = if (null == res) {
       SparseTensor(size, totalLength)
     } else {
-      for (elem <- size) println(elem)
       res.resize(size, totalLength).asInstanceOf[SparseTensor[T]]
     }
     if (flag) {
@@ -855,8 +854,6 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       val currentTensor = tensors(i)
       val curLength = currentTensor.nElement()
       val curTensorOffset = currentTensor.storageOffset() - 1
-//      println("Curlength, curTensorOffset, offset = " + curLength
-//        + " " + curTensorOffset + " " + offset)
       // copy to concat _values
       ev.arraycopy(currentTensor.storage().array(), curTensorOffset,
         res.storage().array(), offset, curLength)
@@ -1592,8 +1589,8 @@ override def getTensorNumeric(): TensorNumeric[T] = {
   /**
    * Perform a batch matrix matrix multiplication of matrices and stored in batch1 and batch2
    * with batch add. batch1 and batch2 must be 3D Tensors each containing the same number of
-   * matrices. If batch1 is a b × n × m Tensor, batch2 a b × m × p Tensor, res will be a
-   * b × n × p Tensor.
+   * matrices. If batch1 is a b ?? n ?? m Tensor, batch2 a b ?? m ?? p Tensor, res will be a
+   * b ?? n ?? p Tensor.
    *
    * In other words,
    * res_i = (beta * M_i) + (alpha * batch1_i * batch2_i)
