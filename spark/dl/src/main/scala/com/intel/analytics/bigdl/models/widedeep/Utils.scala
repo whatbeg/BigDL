@@ -161,7 +161,6 @@ object Utils {
     val storageArray = storage.array()
     val results = iter.map(line => {
       val indices = new Array[Int](10)
-      println("Line = " + line)
       val lis = line.toSeq
       indices(0) = getGender(lis(GENDER), start = 0)                  // 2
       indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002

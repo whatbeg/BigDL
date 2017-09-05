@@ -201,9 +201,7 @@ object DistriOptimizer {
               val localCriterion = cached.localCriterions(i)
               val input = miniBatchBuffer(i).getInput()
               val target = miniBatchBuffer(i).getTarget()
-              println(target.toTensor[Float])
               val output = localModel.forward(input)
-              println(output.toTensor[Float])
               lossArray(i) = ev.toType[Double](localCriterion.forward(output, target))
               val errors = localCriterion.backward(output, target)
               localModel.backward(input, errors)
@@ -216,14 +214,12 @@ object DistriOptimizer {
           driverMetrics.add("computing time for each node", computingTime)
 
           val finishedThreads = trainingThreads.filter(!_.isCancelled).map(_.get())
-          println("This time finish: " + (finishedThreads.size * stackSize))
           recordsNum += finishedThreads.size * stackSize
           var i = 0
           while (i < finishedThreads.size) {
             lossSum += lossArray(finishedThreads(i))
             i += 1
           }
-          println("LossSum = " + lossSum)
           if (finishedThreads.size > 0) {
             time = System.nanoTime()
             val gradLength = cached.modelGradients(0).nElement()
