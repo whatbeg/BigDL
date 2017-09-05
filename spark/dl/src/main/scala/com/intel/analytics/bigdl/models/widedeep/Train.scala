@@ -27,7 +27,7 @@ import com.intel.analytics.bigdl.tensor.Tensor
 
 object Train {
   LoggerFilter.redirectSparkInfoLogs()
-  Logger.getLogger("com.intel.analytics.bigdl.optim").setLevel(Level.DEBUG)
+  Logger.getLogger("com.intel.analytics.bigdl.optim").setLevel(Level.INFO)
 
   import Utils._
 
@@ -80,7 +80,8 @@ object Train {
       optimizer
         .setOptimMethod(optimMethod)
         .setValidation(Trigger.everyEpoch,
-          validateSet, Array(new Top1Accuracy[Float], new Loss[Float]),
+          validateSet, Array(new Top1Accuracy[Float],
+            new Loss[Float](new CrossEntropyCriterion[Float]())),
           batchSize = batchSize,
           miniBatch = new SparseTensorMiniBatch[Float](Array(
             Tensor.sparse(Array(1023213), 1),
