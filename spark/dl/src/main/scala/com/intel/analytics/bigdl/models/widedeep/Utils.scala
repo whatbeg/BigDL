@@ -241,7 +241,7 @@ object Utils {
       val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(2.0f))
                         else Tensor[Float](T(1.0f))
       train_label.resize(1, 1)
-      Array(sps, den)
+      Array(sps, den, train_label)
     })
     results
   }

@@ -27,6 +27,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import com.intel.analytics.bigdl.tensor._
 import com.intel.analytics.bigdl.models.widedeep.Utils._
 import com.intel.analytics.bigdl.nn.ClassNLLCriterion
+import com.intel.analytics.bigdl.nn.CrossEntropyCriterion
 
 
 class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
@@ -65,8 +66,11 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
     val den_result = Tensor[Float](1, 11)
     den_result.concat(1, T(input(0)(1), input(1)(1)), den_result)
     println(den_result)
+    val lbl = Tensor[Float](1, 1)
+    lbl.concat(1, T(input(0)(2), input(1)(2)), lbl)
+    println(lbl)
     val sparseOutput = sparseModel.forward(T(sps_result, den_result))
-    val criterion = new ClassNLLCriterion[Float]()
+    val criterion = new CrossEntropyCriterion[Float]()
     println(sparseOutput.toTensor[Float])
     val loss = criterion.forward(sparseOutput.toTensor[Float], lbl)
     println(loss)
