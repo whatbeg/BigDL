@@ -825,11 +825,11 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       require(tensor.isInstanceOf[SparseTensor[T]])
       require(tensor.dim() == size.length)
     }
-    val flag = if (size.length == 1 && dim == 1) true else false
-    if (flag) size = Array(1) ++ size
+    val dim1Concat = if (size.length == 1 && dim == 1) true else false
+    if (dim1Concat) size = Array(1) ++ size
     var i = 1
     while (i < tensors.length) {
-      size(dim - 1) += (if (flag) 1 else tensors(i).size(dim))
+      size(dim - 1) += (if (dim1Concat) 1 else tensors(i).size(dim))
       i += 1
     }
     val totalLength = tensors.map(_.nElement()).sum
@@ -839,7 +839,7 @@ override def getTensorNumeric(): TensorNumeric[T] = {
     } else {
       res.resize(size, totalLength).asInstanceOf[SparseTensor[T]]
     }
-    if (flag) {
+    if (dim1Concat) {
       concat(tensors.map(_.asInstanceOf[SparseTensor[T]]), result)
     }
     else {
