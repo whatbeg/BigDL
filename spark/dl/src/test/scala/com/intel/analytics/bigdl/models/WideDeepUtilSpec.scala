@@ -20,12 +20,13 @@ import java.io.File
 
 import com.intel.analytics.bigdl.dataset.TensorSample
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import com.intel.analytics.bigdl.tensor.{SparseTensor, DenseTensor, Storage, Tensor}
+import com.intel.analytics.bigdl.tensor.{DenseTensor, SparseTensor, Storage, Tensor}
 import com.intel.analytics.bigdl.models.widedeep.{WideDeep, WideDeepWithSparse}
 import com.intel.analytics.bigdl.utils.{Engine, T}
 import org.apache.spark.{SparkConf, SparkContext}
 import com.intel.analytics.bigdl.tensor._
 import com.intel.analytics.bigdl.models.widedeep.Utils._
+import com.intel.analytics.bigdl.nn.ClassNLLCriterion
 
 
 class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
@@ -65,7 +66,10 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
     den_result.concat(1, T(input(0)(1), input(1)(1)), den_result)
     println(den_result)
     val sparseOutput = sparseModel.forward(T(sps_result, den_result))
+    val criterion = new ClassNLLCriterion[Float]()
     println(sparseOutput.toTensor[Float])
+    val loss = criterion.forward(sparseOutput.toTensor[Float], lbl)
+    println(loss)
     sc.stop()
   }
 
