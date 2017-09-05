@@ -27,7 +27,7 @@ import com.intel.analytics.bigdl.tensor.Tensor
 
 object Train {
   LoggerFilter.redirectSparkInfoLogs()
-  Logger.getLogger("com.intel.analytics.bigdl.optim").setLevel(Level.INFO)
+  Logger.getLogger("com.intel.analytics.bigdl.optim").setLevel(Level.DEBUG)
 
   import Utils._
 
