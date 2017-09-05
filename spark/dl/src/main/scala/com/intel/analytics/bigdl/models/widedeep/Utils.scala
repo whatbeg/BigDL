@@ -154,13 +154,14 @@ object Utils {
       src = sc.textFile(Paths.get(featureFile).toString)
     }
     val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.stripMargin.split(","))
-    else src.filter(s => (s != "|1x3 Cross validator" && s.length > 0))
+    else src.filter(s => (s.contains("|1x3 Cross validator") && s.length > 0))
       .map(_.stripMargin.split(","))
 
     val storage = Storage[Float](10)
     val storageArray = storage.array()
     val results = iter.map(line => {
       val indices = new Array[Int](10)
+      println("Line = " + line)
       val lis = line.toSeq
       indices(0) = getGender(lis(GENDER), start = 0)                  // 2
       indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
@@ -188,7 +189,7 @@ object Utils {
         lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
       den.resize(1, 11)
       println("LIS(LABEL) = " + lis(LABEL))
-      val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(2.0f))
+      val train_label = if (lis(LABEL).contains(">50K")) Tensor[Float](T(2.0f))
                         else Tensor[Float](T(1.0f))
       train_label.resize(1, 1)
 
