@@ -70,7 +70,7 @@ object Train {
         miniBatch = new SparseTensorMiniBatch[Float](Array(
           Tensor.sparse(Array(1023213), 1),
           Tensor(1, 11)),
-          Array(Tensor(1)))
+          Array(Tensor(1, 1)))
       )
 
       if (param.checkpoint.isDefined) {

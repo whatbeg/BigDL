@@ -189,6 +189,7 @@ object Utils {
       den.resize(1, 11)
       val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(2.0f))
                         else Tensor[Float](T(1.0f))
+      train_label.resize(1, 1)
 
       TensorSample[Float](Array(sps, den), Array(train_label))
     })
