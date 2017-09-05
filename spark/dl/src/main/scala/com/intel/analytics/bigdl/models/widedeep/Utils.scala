@@ -187,6 +187,7 @@ object Utils {
         lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
         lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
       den.resize(1, 11)
+      println("LIS(LABEL) = " + lis(LABEL))
       val train_label = if (lis(LABEL) == ">50K") Tensor[Float](T(2.0f))
                         else Tensor[Float](T(1.0f))
       train_label.resize(1, 1)
