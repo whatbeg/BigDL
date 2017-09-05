@@ -220,6 +220,7 @@ object DistriOptimizer {
             lossSum += lossArray(finishedThreads(i))
             i += 1
           }
+
           if (finishedThreads.size > 0) {
             time = System.nanoTime()
             val gradLength = cached.modelGradients(0).nElement()

@@ -154,7 +154,7 @@ object Utils {
       src = sc.textFile(Paths.get(featureFile).toString)
     }
     val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.stripMargin.split(","))
-    else src.filter(s => (s.contains("|1x3 Cross validator") && s.length > 0))
+    else src.filter(s => (!s.contains("|1x3 Cross validator") && s.length > 0))
       .map(_.stripMargin.split(","))
 
     val storage = Storage[Float](10)
