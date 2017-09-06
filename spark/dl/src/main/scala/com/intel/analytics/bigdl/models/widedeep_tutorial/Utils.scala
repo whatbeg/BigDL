@@ -142,12 +142,9 @@ object Utils {
     (sth.hashCode() % bucketsize + bucketsize) % bucketsize + start
   }
 
-  private[this] def hallo(): Int = {
-    if (Array(0).contains(0)) 1 else 2
-  }
   private[this] def categoricalFromVocabList(sth: String,
     vocab_list: Array[String], default: Int = 1, start: Int = 0): Int = {
-    start + (if (vocab_list.indexOf(sth) > -1) vocab_list.indexOf(sth) else default)
+    start + (if (vocab_list.contains(sth)) vocab_list.indexOf(sth) else default)
   }
 
   /**
@@ -202,7 +199,7 @@ object Utils {
 
       for (k <- 8 until 11) storageArray(k) = 1
 
-      val sps = Tensor.sparse(Array(indices), storage, Array(5006), 3)
+      val sps = Tensor.sparse(Array(indices), storage, Array(5006), 11)
       val den = Tensor[Float](40).fill(0)
       den.setValue(
         categoricalFromVocabList(lis(WORKCLASS), workclass_vocab, start = 1), 1
@@ -263,7 +260,6 @@ object Utils {
       indices(10) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 1000) + 4006 // 4006
 
       // 5006
-      println(lis(GENDER))
       storageArray(0) = categoricalFromVocabList(lis(GENDER), gender_vocab, default = -1, start = 0)
       storageArray(1) = categoricalFromVocabList(
         lis(EDUCATION), education_vocab, default = -1, start = 0)
@@ -280,7 +276,7 @@ object Utils {
 
       for (k <- 8 until 11) storageArray(k) = 1
 
-      val sps = Tensor.sparse(Array(indices), storage, Array(5006), 3)
+      val sps = Tensor.sparse(Array(indices), storage, Array(5006), 11)
       val den = Tensor[Float](40).fill(0)
       den.setValue(
         categoricalFromVocabList(lis(WORKCLASS), workclass_vocab, start = 1), 1

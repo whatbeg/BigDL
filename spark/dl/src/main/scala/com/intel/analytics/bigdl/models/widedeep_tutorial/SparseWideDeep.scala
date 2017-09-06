@@ -27,7 +27,7 @@ object SparseWideDeep {
   def apply[T: ClassTag](modelType: String, classNum: Int = 2)
                         (implicit ev: TensorNumeric[T]): Module[T] = {
     val model = Sequential()
-    val wideModel = Sequential().add(Narrow(2, 2006, 3000)).add(Reshape(Array(3000)))
+    val wideModel = Sequential().add(Narrow(2, 2007, 3000)).add(Reshape(Array(3000)))
     val onlywideModel = Identity()
     val deepModel = Sequential()
     val deepColumn = Concat(2)

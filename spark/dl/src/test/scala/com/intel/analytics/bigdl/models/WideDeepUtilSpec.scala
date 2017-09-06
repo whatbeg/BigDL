@@ -77,7 +77,7 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
 //    println(sparseOutput.toTensor[Float])
 //    val loss = criterion.forward(sparseOutput.toTensor[Float], lbl)
 //    println(loss)
-    val input = tutorial_dataSet.take(10)
+    val input = tutorial_dataSet.take(20)
     val sparseModel = SparseWideDeep[Float]("wide_n_deep", 2)
     println(input(0)(1))
     val sps_result = Tensor.sparse[Float](Array(5006), 3)
