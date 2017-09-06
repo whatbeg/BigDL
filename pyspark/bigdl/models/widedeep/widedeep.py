@@ -44,7 +44,7 @@ def build_models(model_type='wide_n_deep', classNum=2):
     deep_column = Concat(2)
     deep_column.add(Sequential().add(Narrow(2, 3009, 33)).add(Reshape([33])))
     deep_column.add(Sequential().add(Select(2, 3042)).add(LookupTable(1000, 8, 0.0)))   # workclass 100
-    deep_column.add(Sequential().add(Select(2, 3043)).add(LookupTable(1000, 8, 0.0)))  # education 1000
+    deep_column.add(Sequential().add(Select(2, 3043)).add(LookupTable(1000, 8, 0.0)))   # education 1000
     deep_column.add(Sequential().add(Narrow(2, 3044, 5)).add(Reshape([5])))
     deep_model.add(deep_column).add(Linear(54, 100)).add(ReLU()).add(Linear(100, 50)).add(ReLU())
 

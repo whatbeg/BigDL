@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.intel.analytics.bigdl.models.widedeep
+package com.intel.analytics.bigdl.models.widedeep_tutorial
 
 import java.nio.file.Paths
 
@@ -77,7 +77,7 @@ object Utils {
     batchSize: Int = 480
   )
 
-  val testParser = new OptionParser[TestParams]("BigDL Wide Deep Example") {
+  val testParser = new OptionParser[TestParams]("BigDL Lenet Test Example") {
     opt[String]('f', "folder")
       .text("where you put the Census data")
       .action((x, c) => c.copy(folder = x))
@@ -85,7 +85,6 @@ object Utils {
     opt[String]("model")
       .text("model snapshot location")
       .action((x, c) => c.copy(model = x))
-      .required()
       .required()
     opt[Int]('b', "batchSize")
       .text("batch size")
@@ -109,7 +108,7 @@ object Utils {
   val LABEL = 14
 
   val LABEL_COLUMN = "label"
-  val COLUMNS = Array("age", "workclass", "fnlwgt", "education", "education_num",
+  val CSV_COLUMNS = Array("age", "workclass", "fnlwgt", "education", "education_num",
     "marital_status", "occupation", "relationship", "race", "gender",
     "capital_gain", "capital_loss", "hours_per_week", "native_country",
     "income_bracket")
@@ -117,6 +116,17 @@ object Utils {
   "relationship", "race", "gender", "native_country")
   val CONTINUOUS_COLUMNS = Array("age", "education_num", "capital_gain", "capital_loss",
   "hours_per_week")
+  val education_vocab = Array("Bachelors", "HS-grad", "11th", "Masters", "9th",
+  "Some-college", "Assoc-acdm", "Assoc-voc", "7th-8th",
+  "Doctorate", "Prof-school", "5th-6th", "10th", "1st-4th",
+  "Preschool", "12th") // 16
+  val marital_status_vocab = Array("Married-civ-spouse", "Divorced", "Married-spouse-absent",
+    "Never-married", "Separated", "Married-AF-spouse", "Widowed")
+  val relationship_vocab = Array("Husband", "Not-in-family", "Wife", "Own-child", "Unmarried",
+    "Other-relative")  // 6
+  val workclass_vocab = Array("Self-emp-not-inc", "Private", "State-gov", "Federal-gov",
+    "Local-gov", "?", "Self-emp-inc", "Without-pay", "Never-worked") // 9
+  val gender_vocab = Array("Female", "Male")
 
   private[this] def getAgeboundaries(age: String, start: Int = 0): Int = {
     if (age == "?") 0 + start
@@ -128,12 +138,16 @@ object Utils {
     }
   }
 
-  private[this] def getGender(gen: String = "Male", start: Int = 0): Int = {
-    if (gen == "Female") start + 1 else start
-  }
-
   private[this] def hashbucket(sth: String, bucketsize: Int = 1000, start: Int = 0): Int = {
     (sth.hashCode() % bucketsize + bucketsize) % bucketsize + start
+  }
+
+  private[this] def hallo(): Int = {
+    if (Array(0).contains(0)) 1 else 2
+  }
+  private[this] def categoricalFromVocabList(sth: String,
+    vocab_list: Array[String], default: Int = 1, start: Int = 0): Int = {
+    start + (if (vocab_list.indexOf(sth) > -1) vocab_list.indexOf(sth) else default)
   }
 
   /**
@@ -157,36 +171,43 @@ object Utils {
     else src.filter(s => (!s.contains("|1x3 Cross validator") && s.length > 0))
       .map(_.stripMargin.split(","))
 
-    val storage = Storage[Float](10)
+    val storage = Storage[Float](3)
     val storageArray = storage.array()
     val results = iter.map(line => {
-      val indices = new Array[Int](10)
+      val indices = new Array[Int](3)
       val lis = line.toSeq
-      indices(0) = getGender(lis(GENDER), start = 0)                  // 2
-      indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
-      indices(2) = hashbucket(lis(EDUCATION), 1000) + 1002            // 2002
-      indices(3) = hashbucket(lis(OCCUPATION), 1000) + 2002           // 3002
-      indices(4) = hashbucket(lis(WORKCLASS), 100) + 3002             // 3102
-      indices(5) = hashbucket(lis(RELATIONSHIP), 100) + 3102          // 3202
-      indices(6) = getAgeboundaries(lis(AGE), start = 0) + 3202       // 3213
-      indices(7) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 10000) + 3213 // 13213
-      indices(8) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 10000) + 13213 // 23213
-      indices(9) = hashbucket(
-        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION), 1000000) + 23213
-      // 1023213
-      for (k <- 0 until 10) storageArray(k) = 1
+      indices(0) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 1000, start = 0) // 0
+      indices(1) = hashbucket(
+        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION), 1000) + 1000 // 1000
+      indices(2) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 1000) + 2000 // 2000
 
-      val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 10)
-      val den = Tensor[Float](T(
-        hashbucket(lis(WORKCLASS), 100, 1).toFloat,         // workclass
-        hashbucket(lis(EDUCATION), 1000, 1).toFloat,        // education
-        (indices(0) + 1).toFloat,                           // gender
-        hashbucket(lis(RELATIONSHIP), 100, 1).toFloat,      // relationship
-        hashbucket(lis(NATIVE_COUNTRY), 1000, 1).toFloat,   // native_country
-        hashbucket(lis(OCCUPATION), 1000, 1).toFloat,       // occupation
-        lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
-        lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
-      den.resize(1, 11)
+      // 3000
+      for (k <- 0 until 3) storageArray(k) = 1
+
+      val sps = Tensor.sparse(Array(indices), storage, Array(3000), 3)
+      val den = Tensor[Float](40).fill(0)
+      den.setValue(
+        categoricalFromVocabList(lis(WORKCLASS), workclass_vocab, start = 1), 1
+      ) // 9
+      den.setValue(
+        categoricalFromVocabList(lis(EDUCATION), education_vocab, start = 10), 1
+      ) // 16
+      den.setValue(
+        categoricalFromVocabList(lis(GENDER), gender_vocab, start = 26), 1
+      ) // 2
+      den.setValue(
+        categoricalFromVocabList(lis(RELATIONSHIP), relationship_vocab,
+          start = 28), 1
+      ) // 6
+      // total : 33
+      den.setValue(34, hashbucket(lis(NATIVE_COUNTRY), 1000, 1).toFloat)
+      den.setValue(35, hashbucket(lis(OCCUPATION), 1000, 1).toFloat)
+      den.setValue(36, lis(AGE).toFloat)
+      den.setValue(37, lis(EDUCATION_NUM).toFloat)
+      den.setValue(38, lis(CAPITAL_GAIN).toFloat)
+      den.setValue(39, lis(CAPITAL_LOSS).toFloat)
+      den.setValue(40, lis(HOURS_PER_WEEK).toFloat)
+      den.resize(1, 40)
       val train_label = if (lis(LABEL).contains(">50K")) Tensor[Float](T(2.0f))
                         else Tensor[Float](T(1.0f))
       train_label.resize(1, 1)
@@ -196,54 +217,6 @@ object Utils {
     results
   }
 
-  private[bigdl] def load2(sc: SparkContext,
-                          featureFile: String, tag: String = "Train"): RDD[Array[Tensor[Float]]] = {
-    var src: RDD[String] = null
-    if (featureFile.startsWith(File.hdfsPrefix)) {
-      src = sc.textFile(featureFile)
-    } else {
-      src = sc.textFile(Paths.get(featureFile).toString)
-    }
-    val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.stripMargin.split(","))
-    else src.filter(s => (!s.contains("|1x3 Cross validator") && s.length > 0))
-      .map(_.stripMargin.split(","))
 
-    val storage = Storage[Float](10)
-    val storageArray = storage.array()
-    val results = iter.map(line => {
-      val indices = new Array[Int](10)
-      val lis = line.toSeq
-      indices(0) = getGender(lis(GENDER), start = 0)                  // 2
-      indices(1) = hashbucket(lis(NATIVE_COUNTRY), 1000) + 2          // 1002
-      indices(2) = hashbucket(lis(EDUCATION), 1000) + 1002            // 2002
-      indices(3) = hashbucket(lis(OCCUPATION), 1000) + 2002           // 3002
-      indices(4) = hashbucket(lis(WORKCLASS), 100) + 3002             // 3102
-      indices(5) = hashbucket(lis(RELATIONSHIP), 100) + 3102          // 3202
-      indices(6) = getAgeboundaries(lis(AGE), start = 0) + 3202       // 3213
-      indices(7) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 10000) + 3213 // 13213
-      indices(8) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 10000) + 13213 // 23213
-      indices(9) = hashbucket(
-        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION), 1000000) + 23213
-      // 1023213
-      for (k <- 0 until 10) storageArray(k) = 1
-
-      val sps = Tensor.sparse(Array(indices), storage, Array(1023213), 10)
-      val den = Tensor[Float](T(
-        hashbucket(lis(WORKCLASS), 100, 1).toFloat,         // workclass
-        hashbucket(lis(EDUCATION), 1000, 1).toFloat,        // education
-        (indices(0) + 1).toFloat,                           // gender
-        hashbucket(lis(RELATIONSHIP), 100, 1).toFloat,      // relationship
-        hashbucket(lis(NATIVE_COUNTRY), 1000, 1).toFloat,   // native_country
-        hashbucket(lis(OCCUPATION), 1000, 1).toFloat,       // occupation
-        lis(AGE).toFloat, lis(EDUCATION_NUM).toFloat, lis(CAPITAL_GAIN).toFloat,
-        lis(CAPITAL_LOSS).toFloat, lis(HOURS_PER_WEEK).toFloat))
-      den.resize(1, 11)
-      val train_label = if (lis(LABEL).contains(">50K")) Tensor[Float](T(2.0f))
-                        else Tensor[Float](T(1.0f))
-      train_label.resize(1, 1)
-      Array(sps, den, train_label)
-    })
-    results
-  }
 
 }
