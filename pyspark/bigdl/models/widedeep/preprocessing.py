@@ -189,7 +189,8 @@ def make_wide_deep_columns(df):
 
     base_columns = np.array(df[:, GENDER])
     base_columns = np.c_[base_columns, df[:, EDUCATION], df[:, MARITAL_STATUS], df[:, RELATIONSHIP]]
-    base_columns = np.c_[base_columns, df[:, WORKCLASS], df[:, OCCPATION], df[:, NATIVE_COUNTRY], df[:, AGE_BUCKETS]]
+    base_columns = np.c_[base_columns, df[:, WORKCLASS], sparse_column(df[:, OCCPATION], 1000),
+                         sparse_column(df[:, NATIVE_COUNTRY], 1000), df[:, AGE_BUCKETS]]
 
     crossed_columns = np.array(sparse_column(df[:, EDUCATION_OCCUPATION], 1000))
     crossed_columns = np.c_[crossed_columns, sparse_column(df[:, AGEBUCKET_EDUCATION_OCCUPATION], 1000)]

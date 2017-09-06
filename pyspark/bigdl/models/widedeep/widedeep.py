@@ -38,8 +38,8 @@ def build_models(model_type='wide_n_deep', classNum=2):
 
     model = Sequential()
     wide_model = Concat(2)
-    base_model = Sequential().add(Narrow(2, 1, 8)).add(Reshape([8]))
-    crossed_model = Sequential().add(Narrow(2, 9, 3000)).add(Reshape([3000]))
+    base_model = Sequential().add(Narrow(2, 1, 2006)).add(Reshape([2006]))
+    crossed_model = Sequential().add(Narrow(2, 2007, 3000)).add(Reshape([3000]))
     deep_model = Sequential()
     deep_column = Concat(2)
     deep_column.add(Sequential().add(Narrow(2, 3009, 33)).add(Reshape([33])))
@@ -49,14 +49,15 @@ def build_models(model_type='wide_n_deep', classNum=2):
     deep_model.add(deep_column).add(Linear(54, 100)).add(ReLU()).add(Linear(100, 50)).add(ReLU())
 
     if model_type == 'wide_n_deep':
-        # wide_model.add(base_model)
+        wide_model.add(base_model)
         wide_model.add(crossed_model)
         wide_model.add(deep_model)
-        model.add(wide_model).add(Linear(3050, classNum)).add(LogSoftMax())
+        model.add(wide_model).add(Linear(5056, classNum)).add(LogSoftMax())
         return model
     elif model_type == 'wide':
-        base_model.add(crossed_model)
-        model.add(base_model).add(Linear(3008, classNum)).add(LogSoftMax())
+        wide_model.add(base_model)
+        wide_model.add(crossed_model)
+        model.add(wide_model).add(Linear(5006, classNum)).add(LogSoftMax())
         return model
     elif model_type == 'deep':
         model.add(deep_model).add(Linear(50, classNum)).add(LogSoftMax())
