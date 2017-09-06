@@ -171,20 +171,38 @@ object Utils {
     else src.filter(s => (!s.contains("|1x3 Cross validator") && s.length > 0))
       .map(_.stripMargin.split(","))
 
-    val storage = Storage[Float](3)
+    val storage = Storage[Float](11)
     val storageArray = storage.array()
     val results = iter.map(line => {
-      val indices = new Array[Int](3)
+      val indices = new Array[Int](11)
       val lis = line.toSeq
-      indices(0) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 1000, start = 0) // 0
-      indices(1) = hashbucket(
-        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION), 1000) + 1000 // 1000
-      indices(2) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 1000) + 2000 // 2000
+      for (k <- 0 until 5) indices(k) = k
+      indices(5) = hashbucket(lis(OCCUPATION), 1000, start = 0) + 5
+      indices(6) = hashbucket(lis(NATIVE_COUNTRY), 1000, start = 0) + 1005
+      indices(7) = 2005
+      indices(8) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 1000, start = 0) + 2006 // 2006
+      indices(9) = hashbucket(
+        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION), 1000) + 3006 // 2006
+      indices(10) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 1000) + 4006 // 4006
 
-      // 3000
-      for (k <- 0 until 3) storageArray(k) = 1
+      // 5006
+      storageArray(0) = categoricalFromVocabList(lis(GENDER), gender_vocab, default = -1, start = 0)
+      storageArray(1) = categoricalFromVocabList(
+        lis(EDUCATION), education_vocab, default = -1, start = 0)
+      storageArray(2) = categoricalFromVocabList(
+        lis(MARITAL_STATUS), marital_status_vocab, default = -1, start = 0)
+      storageArray(3) = categoricalFromVocabList(
+        lis(RELATIONSHIP), relationship_vocab, default = -1, start = 0)
+      storageArray(4) = categoricalFromVocabList(
+        lis(WORKCLASS), workclass_vocab, default = -1, start = 0)
 
-      val sps = Tensor.sparse(Array(indices), storage, Array(3000), 3)
+      storageArray(5) = 1
+      storageArray(6) = 1
+      storageArray(7) = getAgeboundaries(lis(AGE), 0)
+
+      for (k <- 8 until 11) storageArray(k) = 1
+
+      val sps = Tensor.sparse(Array(indices), storage, Array(5006), 3)
       val den = Tensor[Float](40).fill(0)
       den.setValue(
         categoricalFromVocabList(lis(WORKCLASS), workclass_vocab, start = 1), 1
@@ -217,6 +235,82 @@ object Utils {
     results
   }
 
+  private[bigdl] def load2(sc: SparkContext,
+                          featureFile: String, tag: String = "Train"): RDD[Array[Tensor[Float]]] = {
 
+    var src: RDD[String] = null
+    if (featureFile.startsWith(File.hdfsPrefix)) {
+      src = sc.textFile(featureFile)
+    } else {
+      src = sc.textFile(Paths.get(featureFile).toString)
+    }
+    val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.stripMargin.split(","))
+    else src.filter(s => (!s.contains("|1x3 Cross validator") && s.length > 0))
+      .map(_.stripMargin.split(","))
+
+    val storage = Storage[Float](11)
+    val storageArray = storage.array()
+    val results = iter.map(line => {
+      val indices = new Array[Int](11)
+      val lis = line.toSeq
+      for (k <- 0 until 5) indices(k) = k
+      indices(5) = hashbucket(lis(OCCUPATION), 1000, start = 0) + 5
+      indices(6) = hashbucket(lis(NATIVE_COUNTRY), 1000, start = 0) + 1005
+      indices(7) = 2005
+      indices(8) = hashbucket(lis(EDUCATION) + lis(OCCUPATION), 1000, start = 0) + 2006 // 2006
+      indices(9) = hashbucket(
+        getAgeboundaries(lis(AGE)).toString + lis(EDUCATION) + lis(OCCUPATION), 1000) + 3006 // 2006
+      indices(10) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 1000) + 4006 // 4006
+
+      // 5006
+      println(lis(GENDER))
+      storageArray(0) = categoricalFromVocabList(lis(GENDER), gender_vocab, default = -1, start = 0)
+      storageArray(1) = categoricalFromVocabList(
+        lis(EDUCATION), education_vocab, default = -1, start = 0)
+      storageArray(2) = categoricalFromVocabList(
+        lis(MARITAL_STATUS), marital_status_vocab, default = -1, start = 0)
+      storageArray(3) = categoricalFromVocabList(
+        lis(RELATIONSHIP), relationship_vocab, default = -1, start = 0)
+      storageArray(4) = categoricalFromVocabList(
+        lis(WORKCLASS), workclass_vocab, default = -1, start = 0)
+
+      storageArray(5) = 1
+      storageArray(6) = 1
+      storageArray(7) = getAgeboundaries(lis(AGE), 0)
+
+      for (k <- 8 until 11) storageArray(k) = 1
+
+      val sps = Tensor.sparse(Array(indices), storage, Array(5006), 3)
+      val den = Tensor[Float](40).fill(0)
+      den.setValue(
+        categoricalFromVocabList(lis(WORKCLASS), workclass_vocab, start = 1), 1
+      ) // 9
+      den.setValue(
+        categoricalFromVocabList(lis(EDUCATION), education_vocab, start = 10), 1
+      ) // 16
+      den.setValue(
+        categoricalFromVocabList(lis(GENDER), gender_vocab, start = 26), 1
+      ) // 2
+      den.setValue(
+        categoricalFromVocabList(lis(RELATIONSHIP), relationship_vocab,
+          start = 28), 1
+      ) // 6
+      // total : 33
+      den.setValue(34, hashbucket(lis(NATIVE_COUNTRY), 1000, 1).toFloat)
+      den.setValue(35, hashbucket(lis(OCCUPATION), 1000, 1).toFloat)
+      den.setValue(36, lis(AGE).toFloat)
+      den.setValue(37, lis(EDUCATION_NUM).toFloat)
+      den.setValue(38, lis(CAPITAL_GAIN).toFloat)
+      den.setValue(39, lis(CAPITAL_LOSS).toFloat)
+      den.setValue(40, lis(HOURS_PER_WEEK).toFloat)
+      den.resize(1, 40)
+      val train_label = if (lis(LABEL).contains(">50K")) Tensor[Float](T(2.0f))
+      else Tensor[Float](T(1.0f))
+      train_label.resize(1, 1)
+
+      Array(sps, den, train_label)
+    })
+    results
+  }
 
 }

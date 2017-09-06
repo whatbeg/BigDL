@@ -27,7 +27,7 @@ object SparseWideDeep {
   def apply[T: ClassTag](modelType: String, classNum: Int = 2)
                         (implicit ev: TensorNumeric[T]): Module[T] = {
     val model = Sequential()
-    val wideModel = Sequential().add(Narrow(2, 9, 3000)).add(Reshape(Array(3000)))
+    val wideModel = Sequential().add(Narrow(2, 2006, 3000)).add(Reshape(Array(3000)))
     val onlywideModel = Identity()
     val deepModel = Sequential()
     val deepColumn = Concat(2)
@@ -54,7 +54,7 @@ object SparseWideDeep {
             .setName("fc_3")).add(LogSoftMax())
       case "wide" =>
         model.add(onlywideModel)
-          .add(SparseLinear(3008, classNum).setName("fc_3")).add(LogSoftMax())
+          .add(SparseLinear(5006, classNum).setName("fc_3")).add(LogSoftMax())
       case "deep" =>
         deepModel.add(Linear(50, classNum).setName("fc_3")).add(LogSoftMax())
       case _ =>
