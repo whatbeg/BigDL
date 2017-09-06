@@ -175,7 +175,7 @@ object Utils {
     val storageArray = storage.array()
     val results = iter.map(line => {
       val indices = new Array[Int](11)
-      val lis = line.toSeq
+      val lis = line.map(_.trim()).toSeq
       for (k <- 0 until 5) indices(k) = k
       indices(5) = hashbucket(lis(OCCUPATION), 1000, start = 0) + 5
       indices(6) = hashbucket(lis(NATIVE_COUNTRY), 1000, start = 0) + 1005
@@ -252,7 +252,7 @@ object Utils {
     val storageArray = storage.array()
     val results = iter.map(line => {
       val indices = new Array[Int](11)
-      val lis = line.toSeq
+      val lis = line.map(_.trim()).toSeq
       for (k <- 0 until 5) indices(k) = k
       indices(5) = hashbucket(lis(OCCUPATION), 1000, start = 0) + 5
       indices(6) = hashbucket(lis(NATIVE_COUNTRY), 1000, start = 0) + 1005
