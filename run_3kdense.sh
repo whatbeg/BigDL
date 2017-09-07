@@ -30,7 +30,7 @@ spark-submit \
     ${BigDL_HOME}/pyspark/bigdl/models/widedeep/widedeep.py \
     --action train \
     --batchSize 1280 \
-    --maxEpoch 200 \
+    --maxEpoch 100 \
     --lr 0.001 \
     --model wide_n_deep |& tee LOG/BigDL_3k_dense_1280_local20_${logname}.log
 
