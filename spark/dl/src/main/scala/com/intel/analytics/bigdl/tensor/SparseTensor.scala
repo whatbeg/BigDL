@@ -955,11 +955,20 @@ override def getTensorNumeric(): TensorNumeric[T] = {
 
             if (0 != curLength) {
               end += curLength
-
-              // copy values
-              ev.arraycopy(currentTensor.storage().array(), tensorsOffset(index),
-                res.storage().array(), start, curLength)
-
+              try {
+                // copy values
+                ev.arraycopy(currentTensor.storage().array(), tensorsOffset(index),
+                  res.storage().array(), start, curLength)
+              } catch {
+                case e: ArrayIndexOutOfBoundsException =>
+                  println(currentTensor)
+                  println(res)
+                  println("start = " + start)
+                  println("curLength = " + curLength)
+                  println("res.storage().array().length " + res.storage().array().length)
+                  println("currentTensor.storage().array().length "
+                    + currentTensor.storage().array().length)
+              }
               // copy indices
               var indicesIndex = 0
               while (indicesIndex < numOfIndices) {
@@ -967,15 +976,21 @@ override def getTensorNumeric(): TensorNumeric[T] = {
                 val resultIndicesArray = res._indices(indicesIndex).array()
                 if (indicesIndex != dim - 1 || index == 0) {
                   // copy directly
-                  println(s"tensors(${indicesIndex}).size " + currentTensor.size())
-                  assert(currentTensor._indices.length == 2)
-                  println(s"tensorsOffset(${index}) " + tensorsOffset(index))
-                  assert(res._indices.length == 2)
-                  println(s"res._indices(${indicesIndex}).array().length "
-                    + res._indices(indicesIndex).array().length)
-                  println("curLength " + curLength)
-                  System.arraycopy(currentTensor._indices(indicesIndex).array(),
-                    tensorsOffset(index), res._indices(indicesIndex).array(), start, curLength)
+                  try {
+                    System.arraycopy(currentTensor._indices(indicesIndex).array(),
+                      tensorsOffset(index), res._indices(indicesIndex).array(), start, curLength)
+                  } catch {
+                    case e: ArrayIndexOutOfBoundsException =>
+                      println(currentTensor)
+                      println(res)
+                      println(currentTensor._indices(indicesIndex).array())
+                      assert(currentTensor._indices.length == 2)
+                      println(s"tensorsOffset(${index}) " + tensorsOffset(index))
+                      assert(res._indices.length == 2)
+                      println(s"res._indices(${indicesIndex}).array().length "
+                        + res._indices(indicesIndex).array().length)
+                      println("curLength " + curLength)
+                  }
                 } else {
                   // add size
                   var i = 0
