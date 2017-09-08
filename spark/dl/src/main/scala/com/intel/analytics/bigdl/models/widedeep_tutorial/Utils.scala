@@ -164,9 +164,9 @@ object Utils {
     } else {
       src = sc.textFile(Paths.get(featureFile).toString)
     }
-    val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.stripMargin.split(","))
+    val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.trim().split(","))
     else src.filter(s => (!s.contains("|1x3 Cross validator") && s.length > 0))
-      .map(_.stripMargin.split(","))
+      .map(_.trim().split(","))
 
     val storage = Storage[Float](11)
     val storageArray = storage.array()
@@ -241,9 +241,9 @@ object Utils {
     } else {
       src = sc.textFile(Paths.get(featureFile).toString)
     }
-    val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.stripMargin.split(","))
+    val iter = if (tag == "Train") src.filter(s => (s.length > 0)).map(_.trim().split(","))
     else src.filter(s => (!s.contains("|1x3 Cross validator") && s.length > 0))
-      .map(_.stripMargin.split(","))
+      .map(_.trim().split(","))
 
     val storage = Storage[Float](11)
     val storageArray = storage.array()
