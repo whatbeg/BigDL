@@ -967,6 +967,12 @@ override def getTensorNumeric(): TensorNumeric[T] = {
                 val resultIndicesArray = res._indices(indicesIndex).array()
                 if (indicesIndex != dim - 1 || index == 0) {
                   // copy directly
+                  println("currentTensor._indices.length " + currentTensor._indices.length)
+                  println("tensorsOffset(index) " + tensorsOffset(index))
+                  println("res._indices.length " + res._indices.length)
+                  println("res._indices(indicesIndex).array() "
+                    + res._indices(indicesIndex).array().length)
+                  println("curLength " + curLength)
                   System.arraycopy(currentTensor._indices(indicesIndex).array(),
                     tensorsOffset(index), res._indices(indicesIndex).array(), start, curLength)
                 } else {
