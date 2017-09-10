@@ -1954,9 +1954,10 @@ override def exp(): Tensor[T] = {
       case 2 =>
         val sb = new StringBuilder
         val indices = _indices
-        val values = _values
+        val values = _values.array()
         for (i <- 0 until this.nElement)
-          sb.append("(" + indices(0)(i) + ", " + indices(1)(i) + ") : " + values(i)).append('\n')
+          sb.append("(" + indices(0).array()(i) + ", " + indices(1).array()(i)
+            + ") : " + values(i)).append('\n')
 
         s"${sb}[${this.getClass.getName} of size ${this.size(1)}x${this.size(2)}]"
       case _ =>
