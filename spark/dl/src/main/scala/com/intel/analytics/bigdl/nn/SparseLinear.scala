@@ -54,7 +54,18 @@ class SparseLinear[T: ClassTag](
       addBuffer.resize(Array(nFrame)).fill(ev.one)
     }
 
-    SparseTensorBLAS.coomm(ev.one, input, weight.t, ev.zero, output)
+    try {
+      SparseTensorBLAS.coomm(ev.one, input, weight.t, ev.zero, output)
+    } catch {
+      case e: ArrayIndexOutOfBoundsException =>
+        println("SparseLinear: SparseTensorBLAS.coomm ArrayIndexOutOfBoundsException")
+        println("input = " + input.size().mkString("x"))
+        println("input.nElement " + input.nElement())
+        println("weight.t = " + weight.t.size().mkString("x"))
+        println("weight.nElement " + weight.t.nElement())
+        println("output = " + output.size().mkString("x"))
+        println("output.nElement " + output.nElement())
+    }
     if (withBias) {
       try {
         output.addr(ev.one, addBuffer, bias)

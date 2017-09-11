@@ -179,8 +179,7 @@ object SparseTensorBLAS {
             if (Avals.length != ArowIndices.length()) {
               println("sparse matrix A is not correct~")
               println("A.storage() = " + Avals)
-              println("input shape: " + A.nElement() + " " + A.size()
-                + " " + A.toString)
+              println("input shape: " + A.nElement() + " " + A.size())
             }
         }
       }
@@ -205,8 +204,7 @@ object SparseTensorBLAS {
             if (Avals.length != ArowIndices.length()) {
               println("sparse matrix A is not correct~")
               println("A.storage() = " + Avals)
-              println("input shape: " + A.nElement() + " " + A.size()
-                + " " + A.toString)
+              println("input shape: " + A.nElement() + " " + A.size())
             }
         }
       }
