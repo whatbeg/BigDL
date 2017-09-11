@@ -102,8 +102,43 @@ class Linear[T: ClassTag](
         addBuffer.resize(Array(nFrame)).fill(ev.one)
       }
 
-      output.addmm(ev.zero, output, ev.one, input, weight.t)
-      if (withBias) output.addr(ev.one, addBuffer, bias)
+      try {
+        output.addmm(ev.zero, output, ev.one, input, weight.t)
+      } catch {
+        case e: ArrayIndexOutOfBoundsException =>
+          println("Linear: addmm ArrayIndexOutOfBoundsException")
+          println("input = " + input.size().mkString("x"))
+          println("input.nElement " + input.nElement())
+          println("weight.t = " + weight.t.size().mkString("x"))
+          println("weight.nElement " + weight.t.nElement())
+          println("output = " + output.size().mkString("x"))
+          println("output.nElement " + output.nElement())
+        case f: IllegalArgumentException =>
+          println("Linear: addmm IllegalArgumentException")
+          println("input = " + input.size().mkString("x"))
+          println("input.nElement " + input.nElement())
+          println("weight.t = " + weight.t.size().mkString("x"))
+          println("weight.nElement " + weight.t.nElement())
+          println("output = " + output.size().mkString("x"))
+          println("output.nElement " + output.nElement())
+      }
+
+      if (withBias) {
+        try {
+          output.addr(ev.one, addBuffer, bias)
+        } catch {
+          case e: IllegalArgumentException =>
+            println("Linear updateOutput: Illegal Argument Exception in Linear:128")
+            println(s"addBuffer.resize(Array(${nFrame})).fill(1)")
+            println("input = " + input.size().mkString("x"))
+            println(s"output.resize(${nFrame}, ${weight.size(1)})")
+            println("output = (nFrame, weight.size(1)) = " +
+              output.size().mkString("x") + s" (${nFrame}, ${weight.size(1)})")
+            println("addBuffer = " + addBuffer.size().mkString("x"))
+            println("addBuffer.nElement() != nFrame " + (addBuffer.nElement() != nFrame))
+            println("bias = " + bias.size().mkString("x"))
+        }
+      }
     }
     output
   }
