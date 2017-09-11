@@ -16,7 +16,7 @@
 
 package com.intel.analytics.bigdl.models.widedeep_tutorial
 
-import com.intel.analytics.bigdl.dataset.SparseTensorMiniBatch
+import com.intel.analytics.bigdl.dataset.{ArrayTensorMiniBatch, MiniBatch, SparseTensorMiniBatch}
 import com.intel.analytics.bigdl.nn.{CrossEntropyCriterion, Module}
 import com.intel.analytics.bigdl.numeric.NumericFloat
 import com.intel.analytics.bigdl.optim._
@@ -62,15 +62,26 @@ object Train {
         )
       }
 
+      val miniBatch = {
+        if (param.model_type == "wide_n_deep") {
+          new SparseTensorMiniBatch[Float](Array(
+            Tensor.sparse(Array(5006), 11),
+            Tensor(1, 40)),
+            Array(Tensor(1, 1)))
+        }
+        else {
+          new ArrayTensorMiniBatch[Float](Array(
+            Tensor(1, 40)),
+            Array(Tensor(1, 1)))
+        }
+      }
+
       val optimizer = Optimizer(
         model = model,
         sampleRDD = trainDataSet,
         criterion = new CrossEntropyCriterion[Float](),
         batchSize = batchSize,
-        miniBatch = new SparseTensorMiniBatch[Float](Array(
-          Tensor.sparse(Array(5006), 11),
-          Tensor(1, 40)),
-          Array(Tensor(1, 1)))
+        miniBatch = miniBatch
       )
 
       if (param.checkpoint.isDefined) {
@@ -83,10 +94,7 @@ object Train {
           validateSet, Array(new Top1Accuracy[Float],
             new Loss[Float](new CrossEntropyCriterion[Float]())),
           batchSize = batchSize,
-          miniBatch = new SparseTensorMiniBatch[Float](Array(
-            Tensor.sparse(Array(5006), 11),
-            Tensor(1, 40)),
-            Array(Tensor(1, 1))))
+          miniBatch = miniBatch)
         .setEndWhen(Trigger.maxEpoch(param.maxEpoch))
         .optimize()
       sc.stop()
