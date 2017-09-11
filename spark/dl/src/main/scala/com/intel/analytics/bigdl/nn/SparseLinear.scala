@@ -54,7 +54,17 @@ class SparseLinear[T: ClassTag](
     }
 
     SparseTensorBLAS.coomm(ev.one, input, weight.t, ev.zero, output)
-    if (withBias) output.addr(ev.one, addBuffer, bias)
+    if (withBias) {
+      try {
+        output.addr(ev.one, addBuffer, bias)
+      } catch {
+        case e: IllegalArgumentException =>
+          println("input = " + input.size().mkString("x"))
+          println("output = (nFrame, weight.size(1)) = " + output.size().mkString("x"))
+          println("addBuffer = " + addBuffer.size().mkString("x"))
+          println("bias = " + bias.size().mkString("x"))
+      }
+    }
     output
   }
 

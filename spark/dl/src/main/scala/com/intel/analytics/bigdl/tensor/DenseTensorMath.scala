@@ -521,6 +521,21 @@ object DenseTensorMath {
     r
   }
 
+  /**
+   * Performs the outer-product between vec1 (1D tensor) and vec2 (1D tensor).
+   * Optional values v1 and v2 are scalars that multiply mat and vec1 [out] vec2 respectively.
+   * r = beta * t + alpha * vec1 * vec2
+ *
+   * @param r
+   * @param beta
+   * @param t
+   * @param alpha
+   * @param vec1
+   * @param vec2
+   * @param ev
+   * @tparam T
+   * @return
+   */
   def addr[@specialized(Float, Double) T](r: Tensor[T], beta: T, t: Tensor[T],
     alpha: T, vec1: Tensor[T], vec2: Tensor[T])(implicit ev: TensorNumeric[T]): Tensor[T] = {
     require(vec1.dim() == 1 && vec2.dim() == 1)
