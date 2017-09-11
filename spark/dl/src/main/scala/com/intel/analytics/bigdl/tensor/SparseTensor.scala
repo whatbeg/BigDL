@@ -992,6 +992,7 @@ override def save(path: String, overWrite: Boolean): SparseTensor.this.type = {
                         currentTensor._indices(indicesIndex).array().length)
                       assert(currentTensor._indices.length == 2)
                       println(s"tensorsOffset(${index}) " + tensorsOffset(index))
+                      println("start = " + start)
                       assert(res._indices.length == 2)
                       println(s"res._indices(${indicesIndex}).array().length "
                         + res._indices(indicesIndex).array().length)
