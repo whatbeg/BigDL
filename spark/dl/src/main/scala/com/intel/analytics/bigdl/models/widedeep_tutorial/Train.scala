@@ -50,7 +50,7 @@ object Train {
       val model = if (param.modelSnapshot.isDefined) {
         Module.load[Float](param.modelSnapshot.get)
       } else {
-        SparseWideDeep[Float](modelType = "wide_n_deep", classNum = 2)
+        SparseWideDeep[Float](modelType = param.model_type, classNum = 2)
       }
 
       val optimMethod = if (param.stateSnapshot.isDefined) {
