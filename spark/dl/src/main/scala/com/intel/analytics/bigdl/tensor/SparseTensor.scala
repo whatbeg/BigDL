@@ -43,6 +43,8 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
 
   nDimension = _shape.length
 
+  def indices(): Array[Storage[Int]] = _indices
+
   /**
    * A shortcut of nDimension()
    *
