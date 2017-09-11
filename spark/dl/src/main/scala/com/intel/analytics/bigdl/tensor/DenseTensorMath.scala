@@ -614,7 +614,9 @@ object DenseTensorMath {
   def addmv[@specialized(Float, Double) T](r: Tensor[T], beta: T, t: Tensor[T], alpha: T,
     mat: Tensor[T], vec: Tensor[T])(implicit ev: TensorNumeric[T]): Tensor[T] = {
     require(mat.nDimension() == 2 && vec.nDimension() == 1)
-    require(mat.size(2) == vec.size(1))
+    require(mat.size(2) == vec.size(1),
+      s"cannot multiply ${mat.size(1)} x ${mat.size(2)}" +
+        s" and ${vec.size(1)}, ${mat.size(2)} != ${vec.size(1)}")
     require(t.nDimension() == 1)
     require(t.size(1) == mat.size(1), s"${t.size(1)} == ${mat.size(1)}")
 

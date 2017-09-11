@@ -50,6 +50,7 @@ class SparseLinear[T: ClassTag](
     }
 
     if (addBuffer.nElement() != nFrame) {
+      println("addBuffer.resize(Array(nFrame)).fill(ev.one)")
       addBuffer.resize(Array(nFrame)).fill(ev.one)
     }
 
@@ -59,9 +60,11 @@ class SparseLinear[T: ClassTag](
         output.addr(ev.one, addBuffer, bias)
       } catch {
         case e: IllegalArgumentException =>
+          println("SparseLinear updateOutput: Illegal Argument Exception in SparseLinear:59")
           println("input = " + input.size().mkString("x"))
           println("output = (nFrame, weight.size(1)) = " + output.size().mkString("x"))
           println("addBuffer = " + addBuffer.size().mkString("x"))
+          println("addBuffer.nElement() != nFrame " + (addBuffer.nElement() != nFrame))
           println("bias = " + bias.size().mkString("x"))
       }
     }
@@ -105,7 +108,14 @@ class SparseLinear[T: ClassTag](
     }
 
     if (withBias && scaleB != 0) {
-      gradBias.addmv(ev.fromType[Double](scaleB), gradOutput.t, addBuffer)
+      try {
+        gradBias.addmv(ev.fromType[Double](scaleB), gradOutput.t, addBuffer)
+      } catch {
+        case e: IllegalArgumentException =>
+          println("SparseLinear updateOutput: Illegal Argument Exception in SparseLinear:112")
+          println("addBuffer = " + addBuffer.size().mkString("x"))
+          println("gradOutput.t.size = " + gradOutput.t.size().mkString("x"))
+      }
     }
 
     if (null != wRegularizer && scaleW != 0) {
