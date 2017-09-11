@@ -45,6 +45,7 @@ class SparseLinear[T: ClassTag](
     val nElement = output.nElement
     val t = Array(nFrame, weight.size(1))
     output.resize(t)
+    println(s"output.resize(${nFrame}, ${weight.size(1)})")
     if (output.nElement() != nElement) {
       output.zero()
     }
@@ -73,7 +74,8 @@ class SparseLinear[T: ClassTag](
         case e: IllegalArgumentException =>
           println("SparseLinear updateOutput: Illegal Argument Exception in SparseLinear:59")
           println("input = " + input.size().mkString("x"))
-          println("output = (nFrame, weight.size(1)) = " + output.size().mkString("x"))
+          println("output = (nFrame, weight.size(1)) = " +
+            output.size().mkString("x") + s" (${nFrame}, ${weight.size(1)})")
           println("addBuffer = " + addBuffer.size().mkString("x"))
           println("addBuffer.nElement() != nFrame " + (addBuffer.nElement() != nFrame))
           println("bias = " + bias.size().mkString("x"))
