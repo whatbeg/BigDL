@@ -160,14 +160,25 @@ object SparseTensorBLAS {
     var index = 0
     if (B.stride(2) == 1 && B.size(2) == B.stride(1)) {
       while (index < Avals.length) {
-        val curMA = ArowIndices(index)
-        val curKA = AcolIndices(index)
-        var n = 0
-        while (n < nB) {
-          Cvals(curMA * nB + n) += Avals(index) * Bvals(curKA * nB + n + bOffset)
-          n += 1
+        try {
+          val curMA = ArowIndices(index)
+          val curKA = AcolIndices(index)
+          var n = 0
+          while (n < nB) {
+            Cvals(curMA * nB + n) += Avals(index) * Bvals(curKA * nB + n + bOffset)
+            n += 1
+          }
+          index += 1
+        } catch {
+          case e: ArrayIndexOutOfBoundsException =>
+            println("Index = " + index)
+            println("ArowIndices.length() " + ArowIndices.length())
+            println("AcolIndices.length() " + AcolIndices.length())
+            println("Avals.length " + Avals.length)
+            if (Avals.length != ArowIndices.length()) {
+              println("sparse matrix A is not correct~")
+            }
         }
-        index += 1
       }
     } else {
       while (index < Avals.length) {
