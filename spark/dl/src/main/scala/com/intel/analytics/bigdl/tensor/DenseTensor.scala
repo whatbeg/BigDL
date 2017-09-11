@@ -41,6 +41,10 @@ private[tensor] class DenseTensor[@specialized(Float, Double) T: ClassTag](
 
   override def dim(): Int = nDimension
 
+  override def indices(): Array[Storage[Int]] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
   override def nElement(): Int = {
     if (this.nDimension == 0) {
       0
