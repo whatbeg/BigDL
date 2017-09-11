@@ -381,6 +381,13 @@ trait Tensor[T] extends Serializable with TensorMath[T] with Activity {
   def storage(): Storage[T]
 
   /**
+   * Get the indices storage of SparseTensor
+   *
+   * @return Array[storage]
+   */
+  def indices(): Array[Storage[Int]]
+
+  /**
    * tensor offset on the storage
    *
    * @return storage offset, count from 1

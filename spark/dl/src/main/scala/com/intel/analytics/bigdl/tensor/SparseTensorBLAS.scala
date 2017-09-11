@@ -151,6 +151,10 @@ object SparseTensorBLAS {
     val ArowIndices = A._indices(A.indices_order(0))
     val AcolIndices = A._indices(A.indices_order(1))
 
+    require(ArowIndices.length == AcolIndices.length, s"row indices number" +
+      s"${ArowIndices.length()} is not equal to col indices number ${AcolIndices.length()}")
+    require(ArowIndices.length == Avals.length, s"indices length ${ArowIndices.length()}" +
+      s"is not equal to values length ${Avals.length}")
     // Scale matrix first if `beta` is not equal to 0.0
     if (beta != 0.0) {
       MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
@@ -178,7 +182,7 @@ object SparseTensorBLAS {
             println("Avals.length " + Avals.length)
             if (Avals.length != ArowIndices.length()) {
               println("sparse matrix A is not correct~")
-              println("A.storage() = " + Avals)
+              // println("A.storage() = " + Avals)
               println("input shape: " + A.nElement() + " " + A.size())
             }
         }
@@ -203,7 +207,7 @@ object SparseTensorBLAS {
             println("Avals.length " + Avals.length)
             if (Avals.length != ArowIndices.length()) {
               println("sparse matrix A is not correct~")
-              println("A.storage() = " + Avals)
+              // println("A.storage() = " + Avals)
               println("input shape: " + A.nElement() + " " + A.size())
             }
         }

@@ -43,7 +43,7 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
 
   nDimension = _shape.length
 
-  def indices(): Array[Storage[Int]] = _indices
+  override def indices(): Array[Storage[Int]] = _indices
 
   /**
    * A shortcut of nDimension()
@@ -788,7 +788,7 @@ override def save(path: String, overWrite: Boolean): SparseTensor.this.type = {
    *
    * @return
    */
-override def getTensorNumeric(): TensorNumeric[T] = {
+  override def getTensorNumeric(): TensorNumeric[T] = {
     throw new UnsupportedOperationException(s"Unimplemented")
   }
 

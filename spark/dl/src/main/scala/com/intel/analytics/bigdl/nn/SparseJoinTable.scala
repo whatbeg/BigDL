@@ -45,7 +45,7 @@ class SparseJoinTable[T: ClassTag] (
       i += 1
     }
     output.resize(size, nElements)
-
+    println(s"joinTable output nElements = " + nElements)
     output.concat(2, input, output)
 
     output
