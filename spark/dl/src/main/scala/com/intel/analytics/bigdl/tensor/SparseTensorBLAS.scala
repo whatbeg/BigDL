@@ -171,6 +171,7 @@ object SparseTensorBLAS {
           index += 1
         } catch {
           case e: ArrayIndexOutOfBoundsException =>
+            println("SparseTensorBLAS ArrayIndexOutOfBoundsException at 164")
             println("Index = " + index)
             println("ArowIndices.length() " + ArowIndices.length())
             println("AcolIndices.length() " + AcolIndices.length())
@@ -185,14 +186,29 @@ object SparseTensorBLAS {
       }
     } else {
       while (index < Avals.length) {
-        val curMA = ArowIndices(index)
-        val curKA = AcolIndices(index)
-        var n = 0
-        while (n < nB) {
-          Cvals(curMA * nB + n + cOffset) += Avals(index) * Bvals(curKA + n * kB + bOffset)
-          n += 1
+        try {
+          val curMA = ArowIndices(index)
+          val curKA = AcolIndices(index)
+          var n = 0
+          while (n < nB) {
+            Cvals(curMA * nB + n + cOffset) += Avals(index) * Bvals(curKA + n * kB + bOffset)
+            n += 1
+          }
+          index += 1
+        } catch {
+          case e: ArrayIndexOutOfBoundsException =>
+            println("SparseTensorBLAS ArrayIndexOutOfBoundsException at 188")
+            println("Index = " + index)
+            println("ArowIndices.length() " + ArowIndices.length())
+            println("AcolIndices.length() " + AcolIndices.length())
+            println("Avals.length " + Avals.length)
+            if (Avals.length != ArowIndices.length()) {
+              println("sparse matrix A is not correct~")
+              println("A.storage() = " + Avals)
+              println("input shape: " + A.nElement() + " " + A.size()
+                + " " + A.toString)
+            }
         }
-        index += 1
       }
 
     }
