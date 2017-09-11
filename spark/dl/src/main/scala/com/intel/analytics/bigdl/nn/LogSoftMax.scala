@@ -56,9 +56,17 @@ class LogSoftMax[T: ClassTag](
       var t = 1
       while (t <= nframe) {
         val _t = t
-        results(_t - 1) = Engine.model.invoke(() => {
-          updateOutputFrame(input.select(1, _t), output.select(1, _t))
-        })
+        try {
+          results(_t - 1) = Engine.model.invoke(() => {
+            updateOutputFrame(input.select(1, _t), output.select(1, _t))
+          })
+        } catch {
+          case e: ArrayIndexOutOfBoundsException =>
+            println("_t = " + _t)
+            println("nframe, dim = " + nframe + " " + dim)
+            println("input.size " + input.size())
+            println(input)
+        }
         t += 1
       }
       Engine.model.sync(results)
