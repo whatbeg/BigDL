@@ -997,8 +997,21 @@ override def getTensorNumeric(): TensorNumeric[T] = {
                   // add size
                   var i = 0
                   while (i < curLength) {
-                    resultIndicesArray(start + i) = indicesIndexArray(tensorsOffset(index) + i) +
-                      offset
+                    try {
+                      resultIndicesArray(start + i) = indicesIndexArray(tensorsOffset(index) + i) +
+                        offset
+                    } catch {
+                      case e: ArrayIndexOutOfBoundsException =>
+                        println("currentTensor " + indicesIndex + " = " + currentTensor)
+                        println("res.size() = " + res.size().mkString("x"))
+                        println(currentTensor._indices(indicesIndex).array())
+                        assert(currentTensor._indices.length == 2)
+                        println(s"tensorsOffset(${index}) " + tensorsOffset(index))
+                        assert(res._indices.length == 2)
+                        println(s"res._indices(${indicesIndex}).array().length "
+                          + res._indices(indicesIndex).array().length)
+                        println("curLength " + curLength)
+                    }
                     i += 1
                   }
                 }
