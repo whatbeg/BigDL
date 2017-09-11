@@ -237,7 +237,7 @@ object Utils {
                         else Tensor[Float](T(1.0f))
       train_label.resize(1, 1)
 
-      TensorSample[Float](Array(den), Array(train_label))
+      TensorSample[Float](Array(sps, den), Array(train_label))
     })
     results
   }
