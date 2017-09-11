@@ -1002,14 +1002,17 @@ override def getTensorNumeric(): TensorNumeric[T] = {
                         offset
                     } catch {
                       case e: ArrayIndexOutOfBoundsException =>
+                        println(indicesIndex)
+                        println("start + i = " + (start + i))
+                        println("tensorsOffset(index) + i = " + (tensorsOffset(index) + i))
                         println("currentTensor " + indicesIndex + " = " + currentTensor)
                         println("res.size() = " + res.size().mkString("x"))
-                        println(currentTensor._indices(indicesIndex).array())
+                        println("indicesIndexArray " + indicesIndexArray)
                         assert(currentTensor._indices.length == 2)
                         println(s"tensorsOffset(${index}) " + tensorsOffset(index))
                         assert(res._indices.length == 2)
                         println(s"res._indices(${indicesIndex}).array().length "
-                          + res._indices(indicesIndex).array().length)
+                          + resultIndicesArray.length)
                         println("curLength " + curLength)
                     }
                     i += 1
