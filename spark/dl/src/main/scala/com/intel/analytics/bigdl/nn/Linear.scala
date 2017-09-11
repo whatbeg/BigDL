@@ -121,7 +121,13 @@ class Linear[T: ClassTag](
     if (input.dim() == 1) {
       gradInput.addmv(ev.fromType[Int](0), ev.fromType[Int](1), weight.t(), gradOutput)
     } else if (input.dim() == 2) {
-      gradInput.addmm(ev.fromType[Int](0), ev.fromType[Int](1), gradOutput, weight)
+      try {
+        gradInput.addmm(ev.fromType[Int](0), ev.fromType[Int](1), gradOutput, weight)
+      } catch {
+        case e: IllegalArgumentException =>
+          println("GradInput Size = " + gradInput.size().mkString("x"))
+          println("Input Size = " + input.size().mkString("x"))
+      }
     }
     gradInput
   }
