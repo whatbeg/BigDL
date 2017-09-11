@@ -27,7 +27,7 @@ import org.apache.spark.SparkContext
 
 object Train {
   LoggerFilter.redirectSparkInfoLogs()
-  Logger.getLogger("com.intel.analytics.bigdl.optim").setLevel(Level.INFO)
+  Logger.getLogger("com.intel.analytics.bigdl.optim").setLevel(Level.DEBUG)
 
   import Utils._
 
@@ -68,7 +68,7 @@ object Train {
         criterion = new CrossEntropyCriterion[Float](),
         batchSize = batchSize,
         miniBatch = new SparseTensorMiniBatch[Float](Array(
-          Tensor.sparse(Array(5006), 1),
+          Tensor.sparse(Array(5006), 11),
           Tensor(1, 40)),
           Array(Tensor(1, 1)))
       )
@@ -84,7 +84,7 @@ object Train {
             new Loss[Float](new CrossEntropyCriterion[Float]())),
           batchSize = batchSize,
           miniBatch = new SparseTensorMiniBatch[Float](Array(
-            Tensor.sparse(Array(5006), 1),
+            Tensor.sparse(Array(5006), 11),
             Tensor(1, 40)),
             Array(Tensor(1, 1))))
         .setEndWhen(Trigger.maxEpoch(param.maxEpoch))

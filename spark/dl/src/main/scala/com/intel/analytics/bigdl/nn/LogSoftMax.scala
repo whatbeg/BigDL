@@ -66,6 +66,11 @@ class LogSoftMax[T: ClassTag](
             println("nframe, dim = " + nframe + " " + dim)
             println("input.size " + input.size())
             println(input)
+          case f: IllegalArgumentException =>
+            println("_t = " + _t)
+            println("nframe, dim = " + nframe + " " + dim)
+            println("input.size " + input.size())
+            println(input)
         }
         t += 1
       }
