@@ -106,9 +106,10 @@ class Linear[T: ClassTag](
         output.addmm(ev.zero, output, ev.one, input, weight.t)
       } catch {
         case e: ArrayIndexOutOfBoundsException =>
-          println("Linear: addmm ArrayIndexOutOfBoundsException")
+          println("Linear: addmm ArrayIndexOutOfBoundsException 106")
           println("input = " + input.size().mkString("x"))
           println("input.nElement " + input.nElement())
+          println("input = " + input)
           println("weight.t = " + weight.t.size().mkString("x"))
           println("weight.nElement " + weight.t.nElement())
           println("output = " + output.size().mkString("x"))

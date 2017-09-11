@@ -29,6 +29,7 @@ object Utils {
 
   case class TrainParams(
     folder: String = "./",
+    model_type: String = "wide_n_deep",
     checkpoint: Option[String] = None,
     modelSnapshot: Option[String] = None,
     stateSnapshot: Option[String] = None,
@@ -45,6 +46,9 @@ object Utils {
     opt[String]('f', "folder")
       .text("where you put the Census data")
       .action((x, c) => c.copy(folder = x))
+    opt[String]("model_type")
+      .text("what model you want to use")
+      .action((x, c) => c.copy(model_type = x))
     opt[Int]('b', "batchSize")
       .text("batch size")
       .action((x, c) => c.copy(batchSize = x))
@@ -73,6 +77,7 @@ object Utils {
 
   case class TestParams(
     folder: String = "./",
+    model_type: String = "wide_n_deep",
     model: String = "",
     batchSize: Int = 480
   )
@@ -81,6 +86,11 @@ object Utils {
     opt[String]('f', "folder")
       .text("where you put the Census data")
       .action((x, c) => c.copy(folder = x))
+
+    opt[String]("model_type")
+      .text("model type")
+      .action((x, c) => c.copy(model_type = x))
+      .required()
 
     opt[String]("model")
       .text("model snapshot location")
