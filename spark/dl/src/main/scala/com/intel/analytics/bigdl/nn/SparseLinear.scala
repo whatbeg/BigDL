@@ -50,7 +50,7 @@ class SparseLinear[T: ClassTag](
     }
 
     if (addBuffer.nElement() != nFrame) {
-      println("addBuffer.resize(Array(nFrame)).fill(ev.one)")
+      println(s"addBuffer.resize(Array(${nFrame})).fill(1)")
       addBuffer.resize(Array(nFrame)).fill(ev.one)
     }
 

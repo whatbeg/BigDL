@@ -963,7 +963,8 @@ override def getTensorNumeric(): TensorNumeric[T] = {
                   res.storage().array(), start, curLength)
               } catch {
                 case e: ArrayIndexOutOfBoundsException =>
-                  println("currentTensor " + index + " = " + currentTensor)
+                  println("SparseTensor: ArrayIndexOutOfBoundsException: SparseTensor:962")
+                  println("currentTensor " + index + " = " + currentTensor.size().mkString("x"))
                   println("res.size() = " + res.size().mkString("x"))
                   println("start = " + start)
                   println("curLength = " + curLength)
@@ -983,7 +984,9 @@ override def getTensorNumeric(): TensorNumeric[T] = {
                       tensorsOffset(index), res._indices(indicesIndex).array(), start, curLength)
                   } catch {
                     case e: ArrayIndexOutOfBoundsException =>
-                      println("currentTensor " + indicesIndex + " = " + currentTensor)
+                      println("SparseTensor: ArrayIndexOutOfBoundsException: SparseTensor:982")
+                      println("currentTensor " + indicesIndex + " = " +
+                        currentTensor.size().mkString("x"))
                       println("res.size() = " + res.size().mkString("x"))
                       println(currentTensor._indices(indicesIndex).array())
                       assert(currentTensor._indices.length == 2)
@@ -1002,14 +1005,16 @@ override def getTensorNumeric(): TensorNumeric[T] = {
                         offset
                     } catch {
                       case e: ArrayIndexOutOfBoundsException =>
-                        println(indicesIndex)
+                        println("SparseTensor: ArrayIndexOutOfBoundsException: SparseTensor:1004")
+                        println("indicesIndex = " + indicesIndex)
                         println("start + i = " + (start + i))
                         println("tensorsOffset(index) + i = " + (tensorsOffset(index) + i))
-                        println("currentTensor " + indicesIndex + " = " + currentTensor)
+                        println("currentTensor " + indicesIndex + " = " +
+                          currentTensor.size().mkString("x"))
                         println("res.size() = " + res.size().mkString("x"))
                         println("indicesIndexArray " + indicesIndexArray)
                         assert(currentTensor._indices.length == 2)
-                        println(s"tensorsOffset(${index}) " + tensorsOffset(index))
+                        println(s"tensorsOffset(${index}) + ${i}(i) = " + tensorsOffset(index) + i)
                         assert(res._indices.length == 2)
                         println(s"res._indices(${indicesIndex}).array().length "
                           + resultIndicesArray.length)
