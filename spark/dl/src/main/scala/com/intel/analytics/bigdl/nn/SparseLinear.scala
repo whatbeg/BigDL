@@ -66,6 +66,14 @@ class SparseLinear[T: ClassTag](
         println("weight.nElement " + weight.t.nElement())
         println("output = " + output.size().mkString("x"))
         println("output.nElement " + output.nElement())
+      case f: IllegalArgumentException =>
+        println("SparseLinear: SparseTensorBLAS.coomm IllegalArgumentException")
+        println("input = " + input.size().mkString("x"))
+        println("input.nElement " + input.nElement())
+        println("weight.t = " + weight.t.size().mkString("x"))
+        println("weight.nElement " + weight.t.nElement())
+        println("output = " + output.size().mkString("x"))
+        println("output.nElement " + output.nElement())
     }
     if (withBias) {
       try {

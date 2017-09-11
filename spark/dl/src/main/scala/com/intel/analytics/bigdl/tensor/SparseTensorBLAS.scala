@@ -151,9 +151,9 @@ object SparseTensorBLAS {
     val ArowIndices = A._indices(A.indices_order(0))
     val AcolIndices = A._indices(A.indices_order(1))
 
-    require(ArowIndices.length == AcolIndices.length, s"row indices number" +
+    require(ArowIndices.length == AcolIndices.length, s"A: row indices number " +
       s"${ArowIndices.length()} is not equal to col indices number ${AcolIndices.length()}")
-    require(ArowIndices.length == Avals.length, s"indices length ${ArowIndices.length()}" +
+    require(ArowIndices.length == Avals.length, s"A: indices length ${ArowIndices.length()}" +
       s"is not equal to values length ${Avals.length}")
     // Scale matrix first if `beta` is not equal to 0.0
     if (beta != 0.0) {
