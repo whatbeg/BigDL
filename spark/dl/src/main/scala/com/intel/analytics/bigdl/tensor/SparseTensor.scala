@@ -996,6 +996,8 @@ override def save(path: String, overWrite: Boolean): SparseTensor.this.type = {
                       assert(res._indices.length == 2)
                       println(s"res._indices(${indicesIndex}).array().length "
                         + res._indices(indicesIndex).array().length)
+                      println(s"res._indices(${1-indicesIndex}).array().length "
+                        + res._indices(1-indicesIndex).array().length)
                       println("curLength " + curLength)
                   }
                 } else {
@@ -1014,12 +1016,15 @@ override def save(path: String, overWrite: Boolean): SparseTensor.this.type = {
                         println("currentTensor " + indicesIndex + " = " +
                           currentTensor.size().mkString("x"))
                         println("res.size() = " + res.size().mkString("x"))
-                        println("indicesIndexArray " + indicesIndexArray)
+                        println("indicesIndexArray " + indicesIndexArray.length)
                         assert(currentTensor._indices.length == 2)
-                        println(s"tensorsOffset(${index}) + ${i}(i) = " + tensorsOffset(index) + i)
+                        println(s"tensorsOffset(${index}) + ${i}(i) = " +
+                          (tensorsOffset(index) + i))
                         assert(res._indices.length == 2)
                         println(s"res._indices(${indicesIndex}).array().length "
                           + resultIndicesArray.length)
+                        println(s"res._indices(${1-indicesIndex}).array().length "
+                          + res._indices(1-indicesIndex).array().length)
                         println("curLength " + curLength)
                     }
                     i += 1

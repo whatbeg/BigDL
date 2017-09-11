@@ -59,17 +59,23 @@ class SparseLinear[T: ClassTag](
       SparseTensorBLAS.coomm(ev.one, input, weight.t, ev.zero, output)
     } catch {
       case e: ArrayIndexOutOfBoundsException =>
-        println("SparseLinear: SparseTensorBLAS.coomm ArrayIndexOutOfBoundsException")
+        println("SparseLinear: SparseTensorBLAS.coomm ArrayIndexOutOfBoundsException 59")
         println("input = " + input.size().mkString("x"))
         println("input.nElement " + input.nElement())
+        for (i <- input.indices().indices)
+          print(input.indices()(i).length() + " ")
+        println()
         println("weight.t = " + weight.t.size().mkString("x"))
         println("weight.nElement " + weight.t.nElement())
         println("output = " + output.size().mkString("x"))
         println("output.nElement " + output.nElement())
       case f: IllegalArgumentException =>
-        println("SparseLinear: SparseTensorBLAS.coomm IllegalArgumentException")
+        println("SparseLinear: SparseTensorBLAS.coomm IllegalArgumentException 59")
         println("input = " + input.size().mkString("x"))
         println("input.nElement " + input.nElement())
+        for (i <- input.indices().indices)
+          print(input.indices()(i).length() + " ")
+        println()
         println("weight.t = " + weight.t.size().mkString("x"))
         println("weight.nElement " + weight.t.nElement())
         println("output = " + output.size().mkString("x"))
@@ -126,8 +132,16 @@ class SparseLinear[T: ClassTag](
     }
 
     if (scaleW != 0) {
-      SparseTensorMath.addmm(gradWeight, ev.one, gradWeight,
-        ev.fromType[Double](scaleW), gradOutput.t, input)
+      try {
+        SparseTensorMath.addmm(gradWeight, ev.one, gradWeight,
+          ev.fromType[Double](scaleW), gradOutput.t, input)
+      } catch {
+        case e: IllegalArgumentException =>
+          println("SparseLinear updateOutput: Illegal Argument Exception in SparseLinear:130")
+          println("gradWeight = " + gradWeight.size().mkString("x"))
+          println("gradOutput.t.size = " + gradOutput.t.size().mkString("x"))
+          println("input.size = " + input.size().mkString("x"))
+      }
     }
 
     if (withBias && scaleB != 0) {
@@ -135,7 +149,7 @@ class SparseLinear[T: ClassTag](
         gradBias.addmv(ev.fromType[Double](scaleB), gradOutput.t, addBuffer)
       } catch {
         case e: IllegalArgumentException =>
-          println("SparseLinear updateOutput: Illegal Argument Exception in SparseLinear:112")
+          println("SparseLinear updateOutput: Illegal Argument Exception in SparseLinear:142")
           println("addBuffer = " + addBuffer.size().mkString("x"))
           println("gradOutput.t.size = " + gradOutput.t.size().mkString("x"))
       }
