@@ -56,22 +56,30 @@ class LogSoftMax[T: ClassTag](
       var t = 1
       while (t <= nframe) {
         val _t = t
-        results(_t - 1) = Engine.model.invoke(() => {
-          try {
-            updateOutputFrame(input.select(1, _t), output.select(1, _t))
-          } catch {
-            case e: ArrayIndexOutOfBoundsException =>
-              println("_t = " + _t)
-              println("nframe, dim = " + nframe + " " + dim)
-              println("input.size " + input.size().mkString("x"))
-              println("output.size " + output.size().mkString("x"))
-            case f: IllegalArgumentException =>
-              println("_t = " + _t)
-              println("nframe, dim = " + nframe + " " + dim)
-              println("input.size " + input.size().mkString("x"))
-              println("output.size " + output.size().mkString("x"))
-          }
-        })
+        try {
+          results(_t - 1) = Engine.model.invoke(() => {
+            try {
+              updateOutputFrame(input.select(1, _t), output.select(1, _t))
+            } catch {
+              case e: ArrayIndexOutOfBoundsException =>
+                println("_t = " + _t)
+                println("nframe, dim = " + nframe + " " + dim)
+                println("input.size " + input.size().mkString("x"))
+                println("output.size " + output.size().mkString("x"))
+              case f: IllegalArgumentException =>
+                println("_t = " + _t)
+                println("nframe, dim = " + nframe + " " + dim)
+                println("input.size " + input.size().mkString("x"))
+                println("output.size " + output.size().mkString("x"))
+            }
+          })
+        } catch {
+          case e: ArrayIndexOutOfBoundsException =>
+            println("_t = " + _t)
+            println("nframe, dim = " + nframe + " " + dim)
+            println("input.size " + input.size().mkString("x"))
+            println("output.size " + output.size().mkString("x"))
+        }
         t += 1
       }
       Engine.model.sync(results)
