@@ -978,8 +978,9 @@ override def save(path: String, overWrite: Boolean): SparseTensor.this.type = {
                     (if (res.storage() != null) res.size().mkString("x") else "NULL"))
                   println("start = " + start)
                   println("curLength = " + curLength)
-                  if (res.storage() != null)
+                  if (res.storage() != null) {
                     println("res.storage().array().length " + res.storage().array().length)
+                  }
                   println("currentTensor.storage().array().length "
                     + currentTensor.storage().array().length)
               }
