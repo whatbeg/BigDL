@@ -103,7 +103,15 @@ class Concat[T: ClassTag](val dimension: Int)(
     Engine.model.sync(results)
     forwardTimeOverhead += System.nanoTime() - before
 
+    if (!this.output.isInstanceOf[Tensor[T]]) {
+      println("this.output : " + this.output)
+      for (i <- this.modules.indices) {
+        println("this.modules : " + this.modules(i))
+      }
+    }
+
     this.output
+
   }
 
   override def getTimes(): Array[(AbstractModule[_ <: Activity, _ <: Activity, T], Long, Long)] = {
@@ -120,6 +128,10 @@ class Concat[T: ClassTag](val dimension: Int)(
     }
     var i = 0
     while (i < this.modules.length) {
+      if (!this.output.isInstanceOf[Tensor[T]]) {
+        println("this.output : " + this.output)
+        println("this.modules : " + this.modules(i))
+      }
       val currentOutput = this.modules(i).output.asInstanceOf[Tensor[T]]
       val _offset = offset
       val _i = i
