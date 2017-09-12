@@ -270,7 +270,8 @@ object Utils {
       indices(10) = hashbucket(lis(NATIVE_COUNTRY) + lis(OCCUPATION), 1000) + 4006 // 4006
 
       // 5006
-      storageArray(0) = categoricalFromVocabList(lis(GENDER), gender_vocab, default = -1, start = 0)
+      storageArray(0) = categoricalFromVocabList(
+        lis(GENDER), gender_vocab, default = -1, start = 0)
       storageArray(1) = categoricalFromVocabList(
         lis(EDUCATION), education_vocab, default = -1, start = 0)
       storageArray(2) = categoricalFromVocabList(
