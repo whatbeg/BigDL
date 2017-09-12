@@ -45,7 +45,7 @@ class SparseLinear[T: ClassTag](
     val nElement = output.nElement
     val t = Array(nFrame, weight.size(1))
     output.resize(t)
-    // println(s"output.resize(${nFrame}, ${weight.size(1)})")
+    println(s"output.resize(${nFrame}, ${weight.size(1)}) = " + output.size().mkString("x"))
     if (output.nElement() != nElement) {
       output.zero()
     }
