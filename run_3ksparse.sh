@@ -30,5 +30,5 @@ spark-submit \
     ${BigDL_JAR_PATH} \
     -f ${BigDL_HOME}/census \
     -b 1152 \
-    -e 100 \
-    -r 0.001 |& tee LOG/BigDL_3k_sparse_1152_local24_${logname}.log
+    -e 50 \
+    -r 0.001 |& tee LOG/BigDL_3k_sparse_1152_local24_TEST.log
