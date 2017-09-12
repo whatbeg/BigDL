@@ -971,6 +971,17 @@ override def save(path: String, overWrite: Boolean): SparseTensor.this.type = {
                   println("res.storage().array().length " + res.storage().array().length)
                   println("currentTensor.storage().array().length "
                     + currentTensor.storage().array().length)
+                case f: NullPointerException =>
+                  println("SparseTensor: NullPointerException: SparseTensor:962")
+                  println("currentTensor " + index + " = " + currentTensor.size().mkString("x"))
+                  println("res.size() = " +
+                    (if (res.storage() != null) res.size().mkString("x") else "NULL"))
+                  println("start = " + start)
+                  println("curLength = " + curLength)
+                  if (res.storage() != null)
+                    println("res.storage().array().length " + res.storage().array().length)
+                  println("currentTensor.storage().array().length "
+                    + currentTensor.storage().array().length)
               }
               // copy indices
               var indicesIndex = 0

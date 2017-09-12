@@ -42,11 +42,11 @@ class SparseJoinTable[T: ClassTag] (
         size(dimension - 1) += currentOutput.size(dimension)
       }
       nElements += currentOutput.nElement()
-      print(s"${currentOutput.nElement()} + ")
+      // print(s"${currentOutput.nElement()} + ")
       i += 1
     }
     output.resize(size, nElements)
-    println(s"joinTable = " + nElements)
+    // println(s"joinTable = " + nElements)
     output.concat(2, input, output)
 
     output
