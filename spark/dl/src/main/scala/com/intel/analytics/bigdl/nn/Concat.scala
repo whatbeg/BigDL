@@ -120,26 +120,41 @@ class Concat[T: ClassTag](val dimension: Int)(
     }
     var i = 0
     while (i < this.modules.length) {
-      val currentOutput = this.modules(i).output.asInstanceOf[Tensor[T]]
-      val _offset = offset
-      val _i = i
-      results(i) = Engine.model.invoke( () => {
-        val narrowedTensor = gradOutput.narrow(dimension, _offset,
-          currentOutput.size(dimension))
-        if(dimension == 2) {
-          gradouts(_i) = Tensor[T]().resizeAs(narrowedTensor)
-          var b = 1
-          val firstSize = narrowedTensor.size(1)
-          while(b <= firstSize) {
-            gradouts(_i).select(1, b).copy(narrowedTensor.select(1, b))
-            b += 1
+      try {
+        val currentOutput = this.modules(i).output.asInstanceOf[Tensor[T]]
+        val _offset = offset
+        val _i = i
+        results(i) = Engine.model.invoke(() => {
+          val narrowedTensor = gradOutput.narrow(dimension, _offset,
+            currentOutput.size(dimension))
+          if (dimension == 2) {
+            gradouts(_i) = Tensor[T]().resizeAs(narrowedTensor)
+            var b = 1
+            val firstSize = narrowedTensor.size(1)
+            while (b <= firstSize) {
+              gradouts(_i).select(1, b).copy(narrowedTensor.select(1, b))
+              b += 1
+            }
+          } else {
+            gradouts(_i) = narrowedTensor.contiguous()
           }
-        } else {
-          gradouts(_i) = narrowedTensor.contiguous()
-        }
-      })
-      i += 1
-      offset += currentOutput.size(dimension)
+        })
+        i += 1
+        offset += currentOutput.size(dimension)
+      } catch {
+        case e: NullPointerException =>
+          println("NullPointerException in Concat 127")
+          println("i " + i)
+          println("results.length " + results.length)
+          println("input " + input.size().mkString("x"))
+          println("gradOutput " + gradOutput.size().mkString("x"))
+        case f: ClassCastException =>
+          println("ClassCastException in Concat 127")
+          println("i " + i)
+          println("gradouts.length " + gradouts.length)
+          println("input " + input.size().mkString("x"))
+          println("gradOutput " + gradOutput.size().mkString("x"))
+      }
     }
     Engine.model.sync(results)
 
