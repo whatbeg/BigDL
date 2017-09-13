@@ -205,7 +205,9 @@ object SparseTensorBLAS {
     val cOffset = C.storageOffset() - 1
     val BrowIndices = B._indices(B.indices_order(0))
     val BcolIndices = B._indices(B.indices_order(1))
-
+    println(s"Brow, Bcol = ${BrowIndices.length()} ${BcolIndices.length()}")
+    println(s"Bvals " + Bvals.length)
+    println("B.size " + B.size().mkString("x"))
     require(BrowIndices.length() == BcolIndices.length())
     require(BrowIndices.length() == Bvals.length)
 
