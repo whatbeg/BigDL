@@ -119,10 +119,10 @@ object DistriOptimizer {
     var accumulateCount = 0
     val shuffleBefore = System.nanoTime()
     logger.info(s"config $state")
-    logger.info(s"Shuffle data")
-    dataset.shuffle()
-    val shuffleEnd = System.nanoTime()
-    logger.info(s"Shuffle data complete. Takes ${(shuffleEnd - shuffleBefore) / 1e9}s")
+//    logger.info(s"Shuffle data")
+//    dataset.shuffle()
+//    val shuffleEnd = System.nanoTime()
+//    logger.info(s"Shuffle data complete. Takes ${(shuffleEnd - shuffleBefore) / 1e9}s")
 
     var tasks: ArrayBuffer[Future[_]] = new ArrayBuffer()
     var threshold = Long.MaxValue
@@ -338,7 +338,7 @@ object DistriOptimizer {
           logger.info(s"${_header} Epoch finished. Wall clock time is ${wallClockTime / 1e6}ms")
 
           driverState("epoch") = driverState[Int]("epoch") + 1
-          dataset.shuffle()
+          // dataset.shuffle()
           dataRDD = dataset.data(train = true)
           accumulateCount = 0
         }

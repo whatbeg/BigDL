@@ -151,6 +151,9 @@ object SparseTensorBLAS {
     val ArowIndices = A._indices(A.indices_order(0))
     val AcolIndices = A._indices(A.indices_order(1))
 
+    require(ArowIndices.length() == AcolIndices.length())
+    require(ArowIndices.length() == Avals.length)
+
     // Scale matrix first if `beta` is not equal to 0.0
     if (beta != 0.0) {
       MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
@@ -202,6 +205,9 @@ object SparseTensorBLAS {
     val cOffset = C.storageOffset() - 1
     val BrowIndices = B._indices(B.indices_order(0))
     val BcolIndices = B._indices(B.indices_order(1))
+
+    require(BrowIndices.length() == BcolIndices.length())
+    require(BrowIndices.length() == Bvals.length)
 
     // Scale matrix first if `beta` is not equal to 0.0
     if (beta != 0.0) {
