@@ -216,7 +216,8 @@ object SparseTensorBLAS {
 
     // Scale matrix first if `beta` is not equal to 0.0
     if (beta != 0.0) {
-      println("MKL.vsscal")
+      require(MKL.isMKLLoaded, "mkl isn't loaded")
+      // println("MKL.vsscal")
     }
 //    if (beta != 0.0) {
 //      MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
