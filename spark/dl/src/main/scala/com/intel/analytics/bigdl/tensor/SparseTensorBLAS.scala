@@ -209,8 +209,7 @@ object SparseTensorBLAS {
       println(s"Brow, Bcol = ${BrowIndices.length()} ${BcolIndices.length()}")
       println(s"Bvals " + Bvals.length)
       println("B.size " + B.size().mkString("x"))
-      println(A)
-      println(B)
+      println("A.size " + A.size().mkString("x"))
     }
     require(BrowIndices.length() == BcolIndices.length())
     require(BrowIndices.length() == Bvals.length)
