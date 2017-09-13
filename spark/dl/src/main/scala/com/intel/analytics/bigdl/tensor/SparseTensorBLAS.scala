@@ -205,7 +205,7 @@ object SparseTensorBLAS {
     val cOffset = C.storageOffset() - 1
     val BrowIndices = B._indices(B.indices_order(0))
     val BcolIndices = B._indices(B.indices_order(1))
-    if (BrowIndices.length() == BcolIndices.length() || BrowIndices.length() == Bvals.length) {
+    if (BrowIndices.length() != BcolIndices.length() || BrowIndices.length() != Bvals.length) {
       println(s"Brow, Bcol = ${BrowIndices.length()} ${BcolIndices.length()}")
       println(s"Bvals " + Bvals.length)
       println("B.size " + B.size().mkString("x"))
@@ -215,9 +215,9 @@ object SparseTensorBLAS {
     require(BrowIndices.length() == Bvals.length)
 
     // Scale matrix first if `beta` is not equal to 0.0
-    if (beta != 0.0) {
-      MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
-    }
+//    if (beta != 0.0) {
+//      MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
+//    }
     // Perform matrix multiplication and add to C. The rows of B are multiplied by the columns of
     // A, and added to C.
     var index = 0
