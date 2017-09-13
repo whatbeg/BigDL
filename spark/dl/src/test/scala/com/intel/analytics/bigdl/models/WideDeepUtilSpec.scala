@@ -64,10 +64,12 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
 //    println(input.size)
 //    println(input(0)(1))
 //    val sps_result = Tensor.sparse[Float](Array(1023213), 15)
-//    sps_result.concat(1, T(input(0)(0), input(1)(0), input(2)(0), input(3)(0), input(4)(0)), sps_result)
+//    sps_result.concat(1, T(input(0)(0), input(1)(0),
+//      input(2)(0), input(3)(0), input(4)(0)), sps_result)
 //    println(sps_result)
 //    val den_result = Tensor[Float](1, 11)
-//    den_result.concat(1, T(input(0)(1), input(1)(1), input(2)(1), input(3)(1), input(4)(1)), den_result)
+//    den_result.concat(1, T(input(0)(1), input(1)(1),
+//      input(2)(1), input(3)(1), input(4)(1)), den_result)
 //    println(den_result)
 //    val lbl = Tensor[Float](1, 1)
 //    lbl.concat(1, T(input(0)(2), input(1)(2), input(2)(2), input(3)(2), input(4)(2)), lbl)
@@ -81,10 +83,12 @@ class WideDeepUtilSpec extends FlatSpec with BeforeAndAfter with Matchers {
     val sparseModel = SparseWideDeep[Float]("wide_n_deep", 2)
     println(input(0)(1))
     val sps_result = Tensor.sparse[Float](Array(5006), 3)
-    sps_result.concat(1, T(input(0)(0), input(1)(0), input(2)(0), input(3)(0), input(4)(0)), sps_result)
+    sps_result.concat(1, T(input(0)(0), input(1)(0),
+      input(2)(0), input(3)(0), input(4)(0)), sps_result)
     println(sps_result)
     val den_result = Tensor[Float](1, 40)
-    den_result.concat(1, T(input(0)(1), input(1)(1), input(2)(1), input(3)(1), input(4)(1)), den_result)
+    den_result.concat(1, T(input(0)(1), input(1)(1),
+      input(2)(1), input(3)(1), input(4)(1)), den_result)
     println(den_result)
     val lbl = Tensor[Float](1, 1)
     lbl.concat(1, T(input(0)(2), input(1)(2), input(2)(2), input(3)(2), input(4)(2)), lbl)

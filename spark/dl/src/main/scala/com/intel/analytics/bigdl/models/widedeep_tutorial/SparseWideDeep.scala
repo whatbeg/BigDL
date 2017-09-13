@@ -50,7 +50,7 @@ object SparseWideDeep {
         parallel.add(onlywideModel)
         parallel.add(deepModel.add(ToSparse()))
         model.add(parallel).add(SparseJoinTable(2))
-          .add(SparseLinear(5056, classNum, backwardStart = 5006, backwardLength = 50)
+          .add(SparseLinear(5056, classNum, backwardStart = 5007, backwardLength = 50)
             .setName("fc_3")).add(LogSoftMax())
       case "wide" =>
         model.add(onlywideModel)
