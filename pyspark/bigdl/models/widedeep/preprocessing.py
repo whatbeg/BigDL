@@ -43,7 +43,7 @@ CONTINUOUS_COLUMNS = ["age", "education_num", "capital_gain", "capital_loss",
                       "hours_per_week"]
 
 
-def get_data(train_file_name='train.data', test_file_name='test.data'):
+def get_data(train_file_name='census/adult.data', test_file_name='census/adult.test'):
     df_train = pd.read_csv(train_file_name,
                            names=CSV_COLUMNS,
                            skipinitialspace=True,
@@ -218,11 +218,11 @@ def handle():
     df_test = feature_columns(df_test)
 
     train_data = make_wide_deep_columns(df_train[:])
-    np.savetxt("./data/train_tensor.data", train_data, fmt="%d", delimiter=',')
+    np.savetxt("./census/train.data", train_data, fmt="%d", delimiter=',')
     del train_data
 
     test_data = make_wide_deep_columns(df_test[:])
-    np.savetxt("./data/test_tensor.data", test_data, fmt="%d", delimiter=',')
+    np.savetxt("./census/test.data", test_data, fmt="%d", delimiter=',')
     del test_data
 
 handle()

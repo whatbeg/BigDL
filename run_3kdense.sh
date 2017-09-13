@@ -33,7 +33,3 @@ spark-submit \
     --maxEpoch 100 \
     --lr 0.001 \
     --model wide_n_deep |& tee LOG/BigDL_3k_dense_1280_local20_${logname}.log
-
-# grep -E 'DistriOptimizer\$|Test result' LOG/wd${logname}.log > LOG/wd${logname}_F.log
-# grep -E 'Top1Accuracy|Test result' LOG/wd${logname}_F.log > LOG/wd${logname}_SIM.log
-

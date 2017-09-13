@@ -66,12 +66,12 @@ def build_models(model_type='wide_n_deep', classNum=2):
         raise ValueError("Not valid model type. Only for wide, deep, wide_n_deep!")
 
 
-def get_data_rdd(sc, data_type='train'):
+def get_data_rdd(sc, folder, data_type='train'):
 
     if data_type == 'train':
-        data_tensor = 'hdfs://172.168.2.160:9000/data/train_tensor.data'
+        data_tensor = folder + '/train_tensor.data'
     elif data_type == 'test':
-        data_tensor = 'hdfs://172.168.2.160:9000/data/test_tensor.data'
+        data_tensor = folder + '/test_tensor.data'
     else:
         raise ValueError("Not valid Data Type, only 'train' or 'test' !")
 
@@ -88,6 +88,7 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-a", "--action", dest="action", default="train")
     parser.add_option("-b", "--batchSize", type=int, dest="batchSize", default="100")
+    parser.add_option("-f", "--folder", dest="folder", default="")
     parser.add_option("-m", "--model", dest="model_type", default="wide_n_deep")
     parser.add_option("-l", "--lr", type=float, dest="learningRate", default="0.001")
     parser.add_option("-o", "--modelPath", dest="modelPath", default="/tmp/widedeep/model.470")
@@ -100,8 +101,8 @@ if __name__ == "__main__":
     init_engine()
 
     if options.action == "train":
-        train_data = get_data_rdd(sc, 'train')
-        test_data = get_data_rdd(sc, 'test')
+        train_data = get_data_rdd(sc, options.folder, 'train')
+        test_data = get_data_rdd(sc, options.folder, 'test')
 
         optimizer = Optimizer(
             model=build_models(options.model_type, 2),
@@ -122,6 +123,13 @@ if __name__ == "__main__":
         parameters = trained_model.parameters()
 
         results = trained_model.test(test_data, options.batchSize, [Top1Accuracy(), Loss()])
+        for result in results:
+            print(result)
+    elif options.action == "test":
+        # Load a pre-trained model and then validate it through top1 accuracy.
+        test_data = get_data_rdd(sc, options.folder, 'test')
+        model = Model.load(options.modelPath)
+        results = model.test(test_data, options.batchSize, [Top1Accuracy()])
         for result in results:
             print(result)
     sc.stop()
