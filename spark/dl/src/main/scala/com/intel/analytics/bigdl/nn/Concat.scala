@@ -128,9 +128,12 @@ class Concat[T: ClassTag](val dimension: Int)(
     }
     var i = 0
     while (i < this.modules.length) {
-      if (!this.output.isInstanceOf[Tensor[T]]) {
+      if (this.modules(i).output == null || !this.modules(i).output.isInstanceOf[Tensor[T]]) {
         println("this.output : " + this.output)
-        println("this.modules : " + this.modules(i))
+        println("this.modules(i) : " + this.modules(i))
+        println("this.modules(i).output " + this.modules(i).output)
+        println("input " + input.size().mkString("x"))
+        println("gradOutput " + gradOutput.size().mkString("x"))
       }
       val currentOutput = this.modules(i).output.asInstanceOf[Tensor[T]]
       val _offset = offset
