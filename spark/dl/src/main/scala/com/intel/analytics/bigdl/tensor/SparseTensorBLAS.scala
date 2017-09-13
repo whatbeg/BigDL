@@ -214,9 +214,9 @@ object SparseTensorBLAS {
       s"is not equal to values length ${Bvals.length}")
 
     // Scale matrix first if `beta` is not equal to 0.0
-    if (beta != 0.0) {
-      MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
-    }
+//    if (beta != 0.0) {
+//      MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
+//    }
     // Perform matrix multiplication and add to C. The rows of B are multiplied by the columns of
     // A, and added to C.
     var index = 0
