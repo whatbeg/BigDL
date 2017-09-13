@@ -69,9 +69,9 @@ def build_models(model_type='wide_n_deep', classNum=2):
 def get_data_rdd(sc, folder, data_type='train'):
 
     if data_type == 'train':
-        data_tensor = folder + '/train_tensor.data'
+        data_tensor = folder + '/train.data'
     elif data_type == 'test':
-        data_tensor = folder + '/test_tensor.data'
+        data_tensor = folder + '/test.data'
     else:
         raise ValueError("Not valid Data Type, only 'train' or 'test' !")
 
@@ -79,7 +79,7 @@ def get_data_rdd(sc, folder, data_type='train'):
     features = features_label.map(lambda x: x.split(',')[:-1])
     labels = features_label.map(lambda x: x.split(',')[-1]).map(lambda x: int(x))
     record = features.zip(labels).map(lambda features_label:
-                                      Sample(features_label[0], features_label[1]+1, 3048, 1))
+                                      Sample(features_label[0], features_label[1]+1, 5046, 1))
     return record
 
 
