@@ -17,18 +17,18 @@ logname=`date +%m%d%H%M`
 spark-submit \
     --master ${MASTER} \
     --driver-cores 24 \
-    --driver-memory 80g \
+    --driver-memory 100g \
     --executor-cores 24  \
-    --executor-memory 180g \
+    --executor-memory 100g \
     --total-executor-cores 24 \
     --conf spark.rpc.message.maxSize=1024 \
     --properties-file ${BigDL_HOME}/dist/conf/spark-bigdl.conf \
     --jars ${BigDL_JAR_PATH} \
     --conf spark.driver.extraClassPath=${BigDL_JAR_PATH} \
     --conf spark.executor.extraClassPath=bigdl-0.2.0-SNAPSHOT-jar-with-dependencies.jar \
-    --class com.intel.analytics.bigdl.models.widedeep_tutorial.Train \
+    --class com.intel.analytics.bigdl.models.widedeep.Train \
     ${BigDL_JAR_PATH} \
     -f ${BigDL_HOME}/census \
-    -b 1200 \
-    -e 100 \
-    -r 0.001 |& tee LOG/BigDL_3k_sparse_1200_local24_${logname}.log
+    -b 1152 \
+    -e 50 \
+    -r 0.001 |& tee LOG/BigDL_3k_sparse_1152_local24_OLD_TEST${logname}.log
