@@ -91,7 +91,7 @@ if __name__ == "__main__":
     parser.add_option("-f", "--folder", dest="folder", default="")
     parser.add_option("-m", "--model", dest="model_type", default="wide_n_deep")
     parser.add_option("-l", "--lr", type=float, dest="learningRate", default="0.001")
-    parser.add_option("-o", "--modelPath", dest="modelPath", default="/tmp/widedeep/model.470")
+    parser.add_option("-o", "--modelPath", dest="modelPath", default="/tmp/widedeep/20170913_164238/model.989")
     parser.add_option("-c", "--checkpointPath", dest="checkpointPath", default="/tmp/widedeep")
     parser.add_option("-e", "--maxEpoch", type=int, dest="maxEpoch", default="200")
     
@@ -127,6 +127,7 @@ if __name__ == "__main__":
             print(result)
     elif options.action == "test":
         # Load a pre-trained model and then validate it through top1 accuracy.
+        # Now modelPath format is changed, so test will failed in load.
         test_data = get_data_rdd(sc, options.folder, 'test')
         model = Model.load(options.modelPath)
         results = model.test(test_data, options.batchSize, [Top1Accuracy()])

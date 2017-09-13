@@ -52,7 +52,7 @@ We would train a Wide and Deep model in spark local mode with the following comm
         --conf spark.executor.extraClassPath=bigdl-0.2.0-jar-with-dependencies.jar \
         ${BigDL_HOME}/pyspark/bigdl/models/widedeep/widedeep.py \
         --action train \
-        --folder /tmp/census \
+        --folder path/to/census \
         --batchSize 1280 \
         --maxEpoch 100 \
         --lr 0.001 \
@@ -63,11 +63,13 @@ We would train a Wide and Deep model in spark local mode with the following comm
 
 * ```--action``` it can be train or test.
 
+* ```--folder``` option can be used to set data folder, which contains preprocessed data.
+
 * ```--batchSize``` option can be used to set batch size, the default value is 128.
 
 * ```--maxEpoch``` option can be used to control how to end the training process.
 
-* ```--modelPath``` option can be used to set model path for testing, the default value is /tmp/widedeep/model.470.
+* ```--modelPath``` option can be used to set model path for testing, the default value is /tmp/widedeep/2017mmdd_HHMMSS/model.989.
 
 * ```--checkpointPath``` option can be used to set checkpoint path for saving model, the default value is /tmp/widedeep/.
 
