@@ -25,6 +25,15 @@ Please download the Census data in advance, and put them into a folder, e.g. /tm
 
 And then run `preprocessing.py` to get preprocessed data `train.data` and `test.data`.
 
+```
+/tmp/census tree .
+.
+├── adult.data
+├── adult.test
+├── train.data
+├── test.data
+```
+
 We would train a Wide and Deep model in spark local mode with the following commands and you can distribute it across cluster by modifying the spark master and the executor cores.
 
 ```
@@ -76,6 +85,8 @@ We would train a Wide and Deep model in spark local mode with the following comm
 To verify the accuracy, search "accuracy" from log:
 
 ```
-INFO  DistriOptimizer$:247 - [Epoch 1 0/60000][Iteration 1][Wall Clock 0.0s] Train 1280 in xx seconds. Throughput is xx records/second.
+INFO  DistriOptimizer$:247 - [Epoch 1 0/32561][Iteration 1][Wall Clock 0.0s] Train 1280 in xx seconds. Throughput is xx records/second.
+
+INFO  DistriOptimizer$:629 - Top1Accuracy is Accuracy(correct: 13843, count: 16281, accuracy: 0.8502548983477674)
 
 ```
