@@ -22,13 +22,46 @@ import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
 
 import scala.reflect.ClassTag
 
+object WideDeep {
+  def apply[T: ClassTag](modelType: String, classNum: Int = 2)
+                        (implicit ev: TensorNumeric[T]): Module[T] = {
+    val model = Sequential()
+    val wideModel = Concat(2)
+    wideModel.add(Sequential().add(Narrow(2, 1, 5006)).add(Reshape(Array(5006))))
+    val deepModel = Sequential()
+    val deepColumn = Concat(2)
+    // indicator
+    deepColumn.add(Sequential().add(Select(2, 5007)).add(Reshape(Array(33))
+      .setName("indicator")))
+    // occupation 1000
+    deepColumn.add(Sequential().add(Select(2, 5040)).add(LookupTable(1000, 8, 0.0)
+      .setName("embedding_1")))
+    // native_country 1000
+    deepColumn.add(Sequential().add(Select(2, 5041)).add(LookupTable(1000, 8, 0.0)
+      .setName("embedding_2")))
+
+    deepColumn.add(Sequential().add(Narrow(2, 5042, 5)).add(Reshape(Array(5))))
+    deepModel.add(deepColumn).add(Linear(54, 100).setName("fc_1"))
+      .add(ReLU()).add(Linear(100, 50).setName("fc_2")).add(ReLU())
+    modelType match {
+      case "wide_n_deep" =>
+        wideModel.add(deepModel)
+        model.add(wideModel).add(Linear(5056, classNum).setName("fc_3")).add(LogSoftMax())
+      case "wide" =>
+        model.add(wideModel).add(Linear(5006, classNum).setName("fc_3")).add(LogSoftMax())
+      case "deep" =>
+        model.add(deepModel).add(Linear(50, classNum).setName("fc_3")).add(LogSoftMax())
+      case _ =>
+        throw new IllegalArgumentException("unknown type")
+    }
+  }
+}
 
 object SparseWideDeep {
   def apply[T: ClassTag](modelType: String, classNum: Int = 2)
                         (implicit ev: TensorNumeric[T]): Module[T] = {
     val model = Sequential()
-    val crossedModel = Sequential().add(Narrow(2, 2007, 3000)).add(Reshape(Array(3000)))
-    val onlywideModel = Identity()
+    val wideModel = Identity()
     val deepModel = Sequential()
     val deepColumn = Concat(2)
     // indicator columns
@@ -47,13 +80,13 @@ object SparseWideDeep {
     modelType match {
       case "wide_n_deep" =>
         val parallel = ParallelTable()
-        parallel.add(onlywideModel)
+        parallel.add(wideModel)
         parallel.add(deepModel.add(ToSparse()))
         model.add(parallel).add(SparseJoinTable(2))
           .add(SparseLinear(5056, classNum, backwardStart = 5007, backwardLength = 50)
             .setName("fc_3")).add(LogSoftMax())
       case "wide" =>
-        model.add(onlywideModel)
+        model.add(wideModel)
           .add(SparseLinear(5006, classNum).setName("fc_3")).add(LogSoftMax())
       case "deep" =>
         deepModel.add(Linear(50, classNum).setName("fc_3")).add(LogSoftMax())
