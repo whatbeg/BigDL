@@ -16,14 +16,9 @@
 # Still in experimental stage!
 
 
-from optparse import OptionParser
-import os
-import sys
 import copy
 import numpy as np
 import pandas as pd
-import scipy as sp
-
 
 CSV_COLUMNS = [
     "age", "workclass", "fnlwgt", "education", "education_num",
@@ -175,13 +170,13 @@ def feature_columns(df):
     ])
 
     for i in range(df.shape[0]):
-        df[i, OCCPATION] = (hash(df[i, 6]) % 1000 + 1000) % 1000 + 1        # occupation
-        df[i, NATIVE_COUNTRY] = (hash(df[i, 13]) % 1000 + 1000) % 1000 + 1  # native_country
+        df[i, OCCPATION] = (hash(df[i, OCCPATION]) % 1000 + 1000) % 1000 + 1        # occupation
+        df[i, NATIVE_COUNTRY] = (hash(df[i, NATIVE_COUNTRY]) % 1000 + 1000) % 1000 + 1  # native_country
 
     education_occupation = cross_column(df[:, [EDUCATION, OCCPATION]], hash_backet_size=int(1000))
     agebucket_education_occpation = cross_column(df[:, [AGE_BUCKETS, EDUCATION, OCCPATION]], hash_backet_size=int(1000))
     nativecountry_occupation = cross_column(df[:, [NATIVE_COUNTRY, OCCPATION]], hash_backet_size=int(1000))
-    df = np.c_[df, education_occupation, nativecountry_occupation, agebucket_education_occpation]
+    df = np.c_[df, education_occupation, agebucket_education_occpation, nativecountry_occupation]
     return df
 
 
