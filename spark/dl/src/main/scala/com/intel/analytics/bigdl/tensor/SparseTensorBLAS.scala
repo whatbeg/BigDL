@@ -62,8 +62,8 @@ object SparseTensorBLAS {
     val Arows = A._indices(A.indices_order(0))
     val Acols = A._indices(A.indices_order(1))
 
-    if (beta != 1) {
-      MKL.vdscal(yValues.size, beta, yValues, 0, 1)
+    if (beta != 1.0) {
+      y.mul(beta)
     }
     // Perform matrix-vector multiplication and add to y
     var valueCounter = 0
@@ -93,8 +93,8 @@ object SparseTensorBLAS {
     val Arows = A._indices(A.indices_order(0))
     val Acols = A._indices(A.indices_order(1))
 
-    if (beta != 1) {
-      MKL.vsscal(yValues.size, beta, yValues, 0, 1)
+    if (beta != 1.0) {
+      y.mul(beta)
     }
     // Perform matrix-vector multiplication and add to y
     var valueCounter = 0
@@ -157,8 +157,8 @@ object SparseTensorBLAS {
       s"is not equal to values length ${Avals.length}")
 
     // Scale matrix first if `beta` is not equal to 0.0
-    if (beta != 0.0) {
-      MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
+    if (beta != 1.0) {
+      C.mul(beta)
     }
     // Perform matrix multiplication and add to C. The rows of A are multiplied by the columns of
     // B, and added to C.
@@ -214,9 +214,9 @@ object SparseTensorBLAS {
       s"is not equal to values length ${Bvals.length}")
 
     // Scale matrix first if `beta` is not equal to 0.0
-//    if (beta != 0.0) {
-//      MKL.vsscal(Cvals.length, beta, Cvals, C.storageOffset() - 1, 1)
-//    }
+    if (beta != 1.0) {
+      C.mul(beta)
+    }
     // Perform matrix multiplication and add to C. The rows of B are multiplied by the columns of
     // A, and added to C.
     var index = 0
