@@ -69,6 +69,11 @@ We would train a Wide and Deep model in spark local mode with the following comm
 
 ```
 
+and you can add a bash filter code to tail of above code to filtrate training information.
+
+```
+grep -E 'DistriOptimizer\$|Test result' LOG/wd${logname}.log > LOG/wd${logname}_F.log
+```
 
 * ```--action``` it can be train or test.
 
@@ -88,5 +93,4 @@ To verify the accuracy, search "accuracy" from log:
 INFO  DistriOptimizer$:247 - [Epoch 1 0/32561][Iteration 1][Wall Clock 0.0s] Train 1280 in xx seconds. Throughput is xx records/second.
 
 INFO  DistriOptimizer$:629 - Top1Accuracy is Accuracy(correct: 13843, count: 16281, accuracy: 0.8502548983477674)
-
 ```
