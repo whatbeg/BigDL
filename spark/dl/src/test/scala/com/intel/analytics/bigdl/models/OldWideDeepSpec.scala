@@ -25,6 +25,35 @@ import com.intel.analytics.bigdl.utils.{RandomGenerator, T}
 import scala.util.Random
 
 class OldWideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
+
+  "wide" should "forward" in {
+    Random.setSeed(100)
+    RandomGenerator.RNG.setSeed(100)
+    val model = WideDeep("wide", 2)
+    val sparseModel = WideDeepWithSparse("wide", 2)
+    val wideColumn = Tensor(4, 1023213)
+    for (i <- 1 to 4) {
+      wideColumn.setValue(i, Random.nextInt(2) + 1, Random.nextInt(2))
+      wideColumn.setValue(i, Random.nextInt(1000) + 3, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(1000) + 1003, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(1000) + 2003, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(100) + 3003, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(100) + 3103, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(11) + 3203, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(10000) + 3214, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(10000) + 13214, Random.nextInt(10))
+      wideColumn.setValue(i, Random.nextInt(1000000) + 23214, Random.nextInt(10))
+    }
+    val output = model.forward(wideColumn)
+    val wdColumn = wideColumn.narrow(2, 1, 1000)
+    val sparseInput = Tensor.sparse(wideColumn)
+    val swdColumn = Tensor.dense(sparseInput).narrow(2, 1, 1000)
+    sparseModel.getParameters()._1.copy(model.getParameters()._1)
+    val sparseOutput = sparseModel.forward(sparseInput)
+
+    output shouldEqual sparseOutput
+  }
+
   "wide deep" should "forward" in {
     Random.setSeed(100)
     RandomGenerator.RNG.setSeed(100)
@@ -104,8 +133,8 @@ class OldWideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
     sparseModel.zeroGradParameters()
     val sparseGradInput = sparseModel.backward(sparseInput, gradOutput)
 
-    val a = sparseModel.getParametersTable()
-    val b = model.getParametersTable()
+    val a = sparseModel.getParameters()._2
+    val b = model.getParameters()._2
 
     sparseModel.getParameters()._2.equals(model.getParameters()._2) shouldEqual true
 
