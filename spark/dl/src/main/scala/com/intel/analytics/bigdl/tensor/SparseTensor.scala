@@ -1946,6 +1946,130 @@ override def exp(): Tensor[T] = {
     val state = Seq(indices_order, _indices, _values, _storageOffset, _nElement, _shape, nDimension)
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
+
+  /**
+   * @return whether this tensor is an empty tensor. Note that nDimension == 0 is not
+   *         sufficient to determine a tensor is empty, because a scalar tensor's nDimension
+   *         is also 0.
+   */
+  override def isEmpty: Boolean = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * @return whether this tensor is a scalar
+   */
+  override def isScalar: Boolean = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * @return the value of a scalar. Requires the tensor to be a scalar.
+   */
+  override def value(): T = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * Set value for a scalar tensor
+   *
+   * @param value the written value
+   * @return
+   */
+  override def setValue(value: T): SparseTensor.this.type = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * Apply a function to each element of the tensor `t`
+   * and set each value to self
+   *
+   * @param t    tensor to be modified
+   * @param func applied function
+   * @return current tensor
+   */
+  override def applyFun[A : ClassTag](t: Tensor[A], func: (A) => T): Tensor[T] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * Zip values of two other tensors with applying the function `func` on
+   * each two values element-wisely and assign the result value to the
+   * current tensor
+   *
+   * The two given tensors should has the same size of the current tensor
+   *
+   * @param t1   tensor 1
+   * @param t2   tensor 2
+   * @param func zip with the function
+   * @tparam A numeric type of tensor 1
+   * @tparam B numeric type of tensor 2
+   * @return self
+   */
+  override def zipWith[A: ClassTag, B: ClassTag](
+        t1: Tensor[A],
+        t2: Tensor[B],
+        func: (A, B) => T): Tensor[T] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * returns the product of the elements of this
+   *
+   * @return
+   */
+  override def prod(): T = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  override def prod(x: Tensor[T], dim: Int): Tensor[T] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * replaces all elements in-place with the tanh root of the elements of this.
+   *
+   * @return
+   */
+  override def tanh(): Tensor[T] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  override def tanh(y: Tensor[T]): Tensor[T] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * Fill with a given value. It will change the value of the current tensor and return itself
+   *
+   * Note the value should be an instance of T
+   *
+   * @param v value to fill the tensor
+   * @return current tensor
+   */
+  override def forceFill(v: Any): Tensor[T] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * return a new empty tensor of the same type
+   *
+   * @return new tensor
+   */
+  override def emptyInstance(): Tensor[T] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
+
+  /**
+   * Copy the value of the given tensor to the current. They should have same size.
+   * They should also have the same type.
+   *
+   * @param other source tensor
+   * @return current tensor
+   */
+  override def forceCopy(other: Tensor[_]): Tensor[T] = {
+    throw new UnsupportedOperationException(s"Unimplemented")
+  }
 }
 
 object SparseTensor{
