@@ -71,7 +71,7 @@ object SparseTensorBLAS {
       val Arow = Arows(valueCounter)
       val Acol = Acols(valueCounter)
       val Aval = Avals(valueCounter)
-      yValues(Arow - 1 + yOffset) += Aval * alpha * xValues(Acol - 1 + xOffset)
+      yValues(Arow + yOffset) += Aval * alpha * xValues(Acol + xOffset)
       valueCounter += 1
     }
   }
@@ -102,7 +102,7 @@ object SparseTensorBLAS {
       val Arow = Arows(valueCounter)
       val Acol = Acols(valueCounter)
       val Aval = Avals(valueCounter)
-      yValues(Arow-1) += Aval * alpha * xValues(Acol-1)
+      yValues(Arow) += Aval * alpha * xValues(Acol)
       valueCounter += 1
     }
   }
@@ -222,11 +222,11 @@ object SparseTensorBLAS {
     var index = 0
     if (A.stride(2) == 1 && A.size(2) == A.stride(1)) {
       while (index < Bvals.length) {
-        val curMB = BrowIndices(index)
-        val curKB = BcolIndices(index)
+        val curKB = BrowIndices(index)
+        val curNB = BcolIndices(index)
         var n = 0
         while (n < mA) {
-          Cvals(curMB * mA + n) += Bvals(index) * Avals(curKB * mA + n + aOffset)
+          Cvals(n * nB + curNB) += Bvals(index) * Avals(n * kA + curKB + aOffset)
           n += 1
         }
         index += 1
@@ -237,7 +237,7 @@ object SparseTensorBLAS {
         val curNB = BcolIndices(index)
         var n = 0
         while (n < mA) {
-          Cvals(n * nB + curNB + cOffset) += Bvals(index) * Avals(n + curKB * mA + aOffset)
+          Cvals(n * nB + curNB + cOffset) += Bvals(index) * Avals(n + mA * curKB + aOffset)
           n += 1
         }
         index += 1

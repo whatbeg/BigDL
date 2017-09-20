@@ -646,5 +646,12 @@ abstract class AbstractModule[A <: Activity: ClassTag, B <: Activity: ClassTag, 
               ): Array[(ValidationResult, ValidationMethod[T])] = {
     Validator(this, dataSet).test(vMethods)
   }
+
+  def evaluate(dataset: RDD[Sample[T]],
+               vMethods: Array[ValidationMethod[T]],
+               batchSize: Option[Int],
+               miniBatch: MiniBatch[T]): Array[(ValidationResult, ValidationMethod[T])] = {
+    Evaluator(this).test(dataset, vMethods, batchSize, miniBatch)
+  }
 }
 

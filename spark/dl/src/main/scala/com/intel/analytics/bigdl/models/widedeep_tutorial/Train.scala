@@ -80,8 +80,7 @@ object Train {
       optimizer
         .setOptimMethod(optimMethod)
         .setValidation(Trigger.everyEpoch,
-          validateSet, Array(new Top1Accuracy[Float],
-            new Loss[Float](new CrossEntropyCriterion[Float]())),
+          validateSet, Array(new Top1Accuracy[Float], new Loss[Float]()),
           batchSize = batchSize,
           miniBatch = new SparseTensorMiniBatch[Float](Array(
             Tensor.sparse(Array(5006), 1),
