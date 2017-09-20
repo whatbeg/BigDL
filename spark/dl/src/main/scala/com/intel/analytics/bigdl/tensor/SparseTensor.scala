@@ -30,7 +30,8 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
      private[tensor] var _storageOffset: Int,
      private[tensor] var _nElement: Int,
      private[tensor] var _shape : Array[Int],
-     var nDimension: Int
+     var nDimension: Int,
+     var offset1D: Int = 0
     )(implicit ev: TensorNumeric[T]) extends Tensor[T] {
 
   // indices order, count from 0
@@ -500,7 +501,17 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return
    */
   override def set(): Tensor[T] = {
-    throw new UnsupportedOperationException(s"Unimplemented")
+    if (this._indices != null) {
+      for (ind <- this._indices)
+          ind.resize(0)
+    }
+    if (this._values != null) {
+      this._values.resize(0)
+    }
+    this._nElement = 0
+    this._storageOffset = 0
+    this._shape = Array()
+    this
   }
 
   /**
@@ -521,36 +532,40 @@ private[tensor] class SparseTensor[@specialized(Float, Double) T: ClassTag](
    * @return
    */
   override def narrow(dim: Int, index: Int, size: Int): Tensor[T] = {
-    require(dim <= nDimension && dim > 1)
-    val _index = index - 1
-    val dimIndices = _indices(dim - 1)
-    val values = storage().array()
+    require(dim <= nDimension)
+    dim match {
+        // todo: add offset to avoid copy.
+      case _ =>
+        val _index = index - 1
+        val dimIndices = _indices (dim - 1)
+        val values = storage ().array ()
 
-    val nums = dimIndices.count(i => i >= _index && i < _index + size)
-    val newShape = this.size()
-    newShape(dim - 1) = size
-    val newIndices = newShape.map(_ => new Array[Int](nums))
-    val newStorage = Storage[T](nums)
-    val newStorageArray = newStorage.array()
-    var i = 0
-    var count = 0
-    while (i < storage().array().length) {
-      if (dimIndices(i) >= _index && dimIndices(i) < (_index + size)) {
-        newStorageArray(count) = values(i)
-        var dims = 0
-        while (dims < this.dim()) {
-          if (dims == dim - 1) {
-            newIndices(dims)(count) = _indices(dims)(i) - _index
-          } else {
-            newIndices(dims)(count) = _indices(dims)(i)
+        val nums = dimIndices.count (i => i >= _index && i < _index + size)
+        val newShape = this.size ()
+        newShape (dim - 1) = size
+        val newIndices = newShape.map (_ => new Array[Int] (nums) )
+        val newStorage = Storage[T] (nums)
+        val newStorageArray = newStorage.array ()
+        var i = 0
+        var count = 0
+        while (i < storage ().array ().length) {
+          if (dimIndices (i) >= _index && dimIndices (i) < (_index + size) ) {
+            newStorageArray (count) = values (i)
+            var dims = 0
+            while (dims < this.dim () ) {
+              if (dims == dim - 1) {
+                newIndices (dims) (count) = _indices (dims) (i) - _index
+              } else {
+                newIndices (dims) (count) = _indices (dims) (i)
+              }
+              dims += 1
+            }
+            count += 1
           }
-          dims += 1
+          i += 1
         }
-        count += 1
-      }
-      i += 1
+        SparseTensor(newIndices, newStorage, newShape, newShape.length)
     }
-    SparseTensor(newIndices, newStorage, newShape, newShape.length)
   }
 
   /**
@@ -784,7 +799,9 @@ override def getTensorNumeric(): TensorNumeric[T] = {
         _indices = _indices.slice(0, size.length)
         _indices.foreach(_.resize(nElement))
       } else {
-        _indices ++= new Array[Storage[Int]](size.length - _indices.length)
+        val _addIndices = new Array[Storage[Int]](size.length - _indices.length)
+        for (i <- _addIndices.indices) _addIndices(i) = Storage[Int](nElement)
+        _indices ++= _addIndices
         _indices.foreach(_.resize(nElement))
       }
       _storageOffset = 0
@@ -800,17 +817,19 @@ override def getTensorNumeric(): TensorNumeric[T] = {
       dim: Int,
       tensors: Seq[Tensor[T]],
       res: Tensor[T]): Tensor[T] = {
-    require(dim == 2)
-    val size = tensors.head.size()
-    require(size.length == 2)
+    require(dim == 1 || dim == 2)
+    var size = tensors.head.size()
+    require(size.length <= 2, "Dimension larger than 2 are not supported yet!")
     tensors.foreach{tensor =>
       // todo: check size
       require(tensor.isInstanceOf[SparseTensor[T]])
       require(tensor.dim() == size.length)
     }
+    val dim1Concat = if (size.length == 1 && dim == 1) true else false
+    if (dim1Concat) size = Array(1) ++ size
     var i = 1
     while (i < tensors.length) {
-      size(dim - 1) += tensors(i).size(dim)
+      size(dim - 1) += (if (dim1Concat) 1 else tensors(i).size(dim))
       i += 1
     }
     val totalLength = tensors.map(_.nElement()).sum
@@ -818,66 +837,157 @@ override def getTensorNumeric(): TensorNumeric[T] = {
     val result = if (null == res) {
       SparseTensor(size, totalLength)
     } else {
-      res.asInstanceOf[SparseTensor[T]]
+      res.resize(size, totalLength).asInstanceOf[SparseTensor[T]]
     }
-    concat(dim, tensors.map(_.asInstanceOf[SparseTensor[T]]), result)
+    if (dim1Concat) {
+      concat(tensors.map(_.asInstanceOf[SparseTensor[T]]), result)
+    }
+    else {
+      concat(dim, tensors.map(_.asInstanceOf[SparseTensor[T]]), result)
+    }
+  }
+
+  /**
+   * Concatenate a sequence of SparseTensor of 1-dim to 2-dim SparseTensor.
+ *
+   * @param tensors a sequence of tensors
+   * @param res the resulted 2-dim SparseTensor
+   * @return res
+   */
+  private def concat(
+      tensors: Seq[SparseTensor[T]],
+      res: SparseTensor[T]): Tensor[T] = {
+    val numOfIndices = res.dim()  // usually is 2
+    require(tensors.head.dim() == 1, "Not suitable for this interface.")
+    var i, offset, dimOffset = 0
+    while (i < tensors.length) {
+      val currentTensor = tensors(i)
+      val curLength = currentTensor.nElement()
+      val curTensorOffset = currentTensor.storageOffset() - 1
+      // copy to concat _values
+      ev.arraycopy(currentTensor.storage().array(), curTensorOffset,
+        res.storage().array(), offset, curLength)
+      // make new Indices
+      var indicesIndex = 0
+      while (indicesIndex < numOfIndices) {
+        if (indicesIndex == 0) {
+          val storage = Storage[Int](curLength)
+          val storageArray = storage.array()
+          for (j <- 0 until curLength) storageArray(j) = dimOffset
+          System.arraycopy(storageArray, 0, res._indices(indicesIndex).array(),
+            offset, curLength)
+        }
+        else {
+          // copy directly
+          System.arraycopy(currentTensor._indices(indicesIndex - 1).array(),
+            curTensorOffset, res._indices(indicesIndex).array(),
+            offset, curLength)
+        }
+        indicesIndex += 1
+      }
+      offset += curLength
+      dimOffset += 1
+      i += 1
+    }
+    res
   }
 
   private def concat(
       dim: Int,
       tensors: Seq[SparseTensor[T]],
       res: SparseTensor[T]): Tensor[T] = {
-    var start = res._storageOffset
-    var end = res._storageOffset
     val numOfIndices = res.dim()
-    val tensorsOffset = tensors.map(_.storageOffset() - 1).toArray
-    var j = 0
-    while (j < size(1)) {
-      var index = 0
-      var offset = 0
-      while (index < tensors.size) {
-        val findIndexStart = tensors(index)._indices(0).array().indexOf(j, tensorsOffset(index))
-        val findIndexEnd = tensors(index)._indices(0).array().lastIndexOf(j)
-        val curLength = if (findIndexStart != -1 && findIndexEnd != -1) {
-          findIndexEnd - findIndexStart + 1
-        } else {
-          0
-        }
+    dim match {
+      case 1 =>
+        var i = 0
+        var offset = 0
+        var dimOffset = 0
+        while (i < tensors.length) {
+          val currentTensor = tensors(i)
+          val curLength = currentTensor.nElement()
+          val curTensorOffset = currentTensor.storageOffset() - 1
 
-        if (0 != curLength) {
-          end += curLength
+          ev.arraycopy(currentTensor.storage().array(), currentTensor.storageOffset() - 1,
+            res.storage().array(), offset, currentTensor.nElement())
 
-          // copy values
-          ev.arraycopy(tensors(index).storage().array(), tensorsOffset(index),
-            res.storage().array(), start, curLength)
-
-          // copy indices
           var indicesIndex = 0
           while (indicesIndex < numOfIndices) {
-            val indicesIndexArray = tensors(index)._indices(indicesIndex).array()
+            val indicesIndexArray = currentTensor._indices(indicesIndex).array()
             val resultIndicesArray = res._indices(indicesIndex).array()
-            if (indicesIndex != dim - 1 || index == 0) {
+            if (i == 0 || indicesIndex != dim - 1) {
               // copy directly
-              System.arraycopy(tensors(index)._indices(indicesIndex).array(), tensorsOffset(index),
-                res._indices(indicesIndex).array(), start, curLength)
+              System.arraycopy(currentTensor._indices(indicesIndex).array(),
+                curTensorOffset, res._indices(indicesIndex).array(),
+                offset, curLength)
             } else {
               // add size
-              var i = 0
-              while (i < curLength) {
-                resultIndicesArray(start + i) = indicesIndexArray(tensorsOffset(index) + i) +
-                  offset
-                i += 1
+              var j = 0
+              while (j < curLength) {
+                resultIndicesArray(offset + j) = indicesIndexArray(curTensorOffset + j) +
+                  dimOffset
+                j += 1
               }
             }
             indicesIndex += 1
           }
-          tensorsOffset(index) += curLength
-          start = end
+
+          offset += curLength
+          dimOffset += currentTensor.size(dim)
+          i += 1
         }
-        offset += tensors(index).size(dim)
-        index += 1
-      }
-      j += 1
+      case 2 =>
+        var start = res._storageOffset
+        var end = res._storageOffset
+        val tensorsOffset = tensors.map(_.storageOffset() - 1).toArray
+        var j = 0
+        while (j < size(dim - 1)) {
+          var index = 0
+          var offset = 0
+          while (index < tensors.size) {
+            val currentTensor = tensors(index)
+            val findIndexStart = currentTensor._indices(0).array().indexOf(j, tensorsOffset(index))
+            val findIndexEnd = currentTensor._indices(0).array().lastIndexOf(j)
+            val curLength = if (findIndexStart != -1 && findIndexEnd != -1) {
+              findIndexEnd - findIndexStart + 1
+            } else {
+              0
+            }
+
+            if (0 != curLength) {
+              end += curLength
+
+              // copy values
+              ev.arraycopy(currentTensor.storage().array(), tensorsOffset(index),
+                res.storage().array(), start, curLength)
+
+              // copy indices
+              var indicesIndex = 0
+              while (indicesIndex < numOfIndices) {
+                val indicesIndexArray = currentTensor._indices(indicesIndex).array()
+                val resultIndicesArray = res._indices(indicesIndex).array()
+                if (indicesIndex != dim - 1 || index == 0) {
+                  // copy directly
+                  System.arraycopy(currentTensor._indices(indicesIndex).array(),
+                    tensorsOffset(index), res._indices(indicesIndex).array(), start, curLength)
+                } else {
+                  // add size
+                  var i = 0
+                  while (i < curLength) {
+                    resultIndicesArray(start + i) = indicesIndexArray(tensorsOffset(index) + i) +
+                      offset
+                    i += 1
+                  }
+                }
+                indicesIndex += 1
+              }
+              tensorsOffset(index) += curLength
+              start = end
+            }
+            offset += currentTensor.size(dim)
+            index += 1
+          }
+          j += 1
+        }
     }
 
     res
@@ -1489,8 +1599,8 @@ override def getTensorNumeric(): TensorNumeric[T] = {
   /**
    * Perform a batch matrix matrix multiplication of matrices and stored in batch1 and batch2
    * with batch add. batch1 and batch2 must be 3D Tensors each containing the same number of
-   * matrices. If batch1 is a b × n × m Tensor, batch2 a b × m × p Tensor, res will be a
-   * b × n × p Tensor.
+   * matrices. If batch1 is a b x n x m Tensor, batch2 a b x m x p Tensor, res will be a
+   * b x n x p Tensor.
    *
    * In other words,
    * res_i = (beta * M_i) + (alpha * batch1_i * batch2_i)
@@ -1808,6 +1918,30 @@ override def exp(): Tensor[T] = {
       this._nElement == other._nElement
   }
 
+  override def toString(): String = {
+    this.nDimension match {
+      case 0 => s"[${this.getClass.getName} with no dimension]"
+      case 1 =>
+        val sb = new StringBuilder
+        val indices = _indices
+        val values = _values
+        for (i <- 0 until this.nElement)
+          sb.append(indices(0)(i) + " : " + values(i)).append('\n')
+
+        s"${sb}[${this.getClass.getName} of size ${this.size(1)}]"
+      case 2 =>
+        val sb = new StringBuilder
+        val indices = _indices
+        val values = _values
+        for (i <- 0 until this.nElement)
+          sb.append("(" + indices(0)(i) + ", " + indices(1)(i) + ") : " + values(i)).append('\n')
+
+        s"${sb}[${this.getClass.getName} of size ${this.size(1)}x${this.size(2)}]"
+      case _ =>
+        throw new UnsupportedOperationException(s"Unimplemented")
+    }
+  }
+
   override def hashCode(): Int = {
     val state = Seq(indices_order, _indices, _values, _storageOffset, _nElement, _shape, nDimension)
     state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
@@ -1859,10 +1993,10 @@ object SparseTensor{
     denseTensor.dim() match {
       case 1 =>
         var sparseIndex = 0
-        var i = 0
-        while (i < denseTensor.nElement()) {
+        var i = 1
+        while (i <= denseTensor.nElement()) {
           if (denseTensor.valueAt(i) != 0) {
-            indices(0)(sparseIndex) = i
+            indices(0)(sparseIndex) = i - 1
             storageArray(sparseIndex) = denseTensor.valueAt(i)
             sparseIndex += 1
           }
