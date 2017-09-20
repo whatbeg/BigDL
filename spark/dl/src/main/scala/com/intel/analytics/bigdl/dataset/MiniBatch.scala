@@ -113,8 +113,8 @@ private[bigdl] class ArrayTensorMiniBatch[T: ClassTag](
       featurePaddingParam: Option[PaddingParam[T]] = None,
       labelPaddingParam: Option[PaddingParam[T]] = None) extends MiniBatch[T]{
   require(inputData.length > 0, "Input data in MiniBatch is empty.")
-  private var batchSize = 0
-  private var unlabeled = false
+  protected var batchSize = 0
+  protected var unlabeled = false
 
   val (featurePadding, featurePaddingStrategy) = if (featurePaddingParam.isDefined) {
     (featurePaddingParam.get.paddingTensor, featurePaddingParam.get.paddingStrategy)
@@ -571,5 +571,41 @@ case class FixedLength(fixedLength: Array[Int]) extends PaddingStrategy {
       i += 1
     }
     sizes
+  }
+}
+
+class SparseTensorMiniBatch[T: ClassTag](
+      inputData: Array[Tensor[T]],
+      targetData: Array[Tensor[T]]) extends ArrayTensorMiniBatch[T](inputData, targetData) {
+
+  override def set(samples: Seq[Sample[T]])(implicit ev: TensorNumeric[T]): this.type = {
+    require(samples.length > 0, "samples is empty")
+    require(samples(0).isInstanceOf[TensorSample[T]])
+    val _samples = samples.map(_.asInstanceOf[TensorSample[T]])
+    require(batchSize == 0 || samples.length <= batchSize, "setValue: samples's size doesn't " +
+      s"match mini batch size, excepted ${size()} got ${samples.length}")
+    if (batchSize == 0) {
+      batchSize = samples.length // set a batchSize when set data.
+      unlabeled = samples.head.numLabel() == 0
+    }
+    val features = _samples.map(_.features)
+    val labels = _samples.map(_.labels)
+
+    var i = 0
+    while (i < inputData.length) {
+      inputData(i).concat(1, features.map(_.apply(i)), inputData(i))
+      i += 1
+    }
+
+    if (!unlabeled) {
+      var j = 0
+      while (j < targetData.length) {
+        targetData(j).concat(1, labels.map(_.apply(j)), targetData(j))
+        j += 1
+      }
+    }
+
+
+    this
   }
 }

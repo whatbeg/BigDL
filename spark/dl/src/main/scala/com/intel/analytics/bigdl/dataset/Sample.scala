@@ -20,6 +20,7 @@ package com.intel.analytics.bigdl.dataset
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
 import com.intel.analytics.bigdl.tensor.{Storage, Tensor}
 import org.apache.commons.lang3.SerializationUtils
+import org.apache.zookeeper.KeeperException.UnimplementedException
 
 import scala.reflect.ClassTag
 
@@ -100,7 +101,9 @@ abstract class Sample[T: ClassTag] extends Serializable {
         featureData: Array[T],
         labelData: Array[T],
         featureSize: Array[Int],
-        labelSize: Array[Int])(implicit ev: TensorNumeric[T]): Sample[T]
+        labelSize: Array[Int])(implicit ev: TensorNumeric[T]): Sample[T] = {
+    throw new UnsupportedOperationException("Sample.set(): unimplemented deprecated method")
+  }
 
   /**
    * Get feature sizes
@@ -322,5 +325,48 @@ object Sample {
       i += 1
     }
     true
+  }
+}
+
+private[bigdl] class TensorSample[T: ClassTag](
+      val features: Array[Tensor[T]],
+      val labels: Array[Tensor[T]]) extends Sample[T] {
+  val featureSize = features.map(_.size())
+  val labelSize = features.map(_.size())
+
+  def featureLength(index: Int): Int = {
+    features(0).size(1)
+  }
+
+  def labelLength(index: Int): Int = {
+    labels(0).size(1)
+  }
+
+  def numFeature(): Int = {
+    features.length
+  }
+
+  def numLabel(): Int = {
+    labels.length
+  }
+
+  def getFeatureSize(): Array[Array[Int]] = {
+    featureSize
+  }
+
+  def getLabelSize(): Array[Array[Int]] = {
+    labelSize
+  }
+
+  def getData(): Array[T] = {
+    throw new UnimplementedException()
+  }
+}
+
+object TensorSample {
+  def apply[T: ClassTag](
+    featureTensors: Array[Tensor[T]],
+    labelTensors: Array[Tensor[T]])(implicit ev: TensorNumeric[T]) : Sample[T] = {
+    new TensorSample[T](featureTensors, labelTensors)
   }
 }

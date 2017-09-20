@@ -1976,7 +1976,47 @@ private[tensor] class DenseTensor[@specialized(Float, Double) T: ClassTag](
   override def concat(
       dim: Int,
       tensors: Seq[Tensor[T]], res: Tensor[T] = null): Tensor[T] = {
-    throw new UnsupportedOperationException("Unimpleneted")
+    val size = tensors.head.size()
+    var i = 1
+    while (i < tensors.length) {
+      size(dim - 1) += tensors(i).size(dim)
+      i += 1
+    }
+
+    val result = if (res == null) {
+      Tensor(size)
+    } else {
+      res.resize(size)
+    }
+
+    i = 0
+    var offset = 1
+    while (i < tensors.length) {
+      val current = tensors(i)
+      val target = result.narrow(dim, offset, current.size(dim))
+
+      if (target.isContiguous() || dim > 2) {
+        // Copy directly when target is Contiguous or dimension is larger than 2
+        // in which case the contiguous region in target tensor is fairly small in practice
+        target.copy(current)
+      } else {
+        // Divide target into contiguous frames when target isn't contiguous
+        var f = 1
+        while (f <= target.size(1)) {
+          val curFrame = target.select(1, f)
+          val outputFrame = current.select(1, f)
+          require(curFrame.isContiguous())
+          require(outputFrame.isContiguous())
+          curFrame.copy(outputFrame)
+          f += 1
+        }
+      }
+
+      offset += current.size(dim)
+      i += 1
+    }
+    result
+
   }
 }
 
