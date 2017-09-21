@@ -17,11 +17,12 @@
 package com.intel.analytics.bigdl.models.widedeep_tutorial
 
 import com.intel.analytics.bigdl.dataset.SparseTensorMiniBatch
-import com.intel.analytics.bigdl.nn.{CrossEntropyCriterion, Module}
+import com.intel.analytics.bigdl.nn.{ClassNLLCriterion, CrossEntropyCriterion, Module}
 import com.intel.analytics.bigdl.numeric.NumericFloat
 import com.intel.analytics.bigdl.optim._
 import com.intel.analytics.bigdl.tensor.Tensor
 import com.intel.analytics.bigdl.utils.{Engine, LoggerFilter}
+import com.intel.analytics.bigdl.visualization.{TrainSummary, ValidationSummary}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 
@@ -65,7 +66,7 @@ object Train {
       val optimizer = Optimizer(
         model = model,
         sampleRDD = trainDataSet,
-        criterion = new CrossEntropyCriterion[Float](),
+        criterion = ClassNLLCriterion[Float](),
         batchSize = batchSize,
         miniBatch = new SparseTensorMiniBatch[Float](Array(
           Tensor.sparse(Array(5006), 1),
@@ -77,11 +78,20 @@ object Train {
         optimizer.setCheckpoint(param.checkpoint.get, Trigger.everyEpoch)
       }
 
+      val logdir = "widedeep"
+      val appName = s"${sc.applicationId}"
+      val trainSummary = TrainSummary(logdir, appName)
+      trainSummary.setSummaryTrigger("LearningRate", Trigger.severalIteration(1))
+      trainSummary.setSummaryTrigger("Parameters", Trigger.severalIteration(10))
+      val validationSummary = ValidationSummary(logdir, appName)
+
       optimizer
         .setOptimMethod(optimMethod)
+        .setTrainSummary(trainSummary)
+        .setValidationSummary(validationSummary)
         .setValidation(Trigger.everyEpoch,
           validateSet, Array(new Top1Accuracy[Float],
-            new Loss[Float](new CrossEntropyCriterion[Float]())),
+            new Loss[Float](ClassNLLCriterion[Float]())),
           batchSize = batchSize,
           miniBatch = new SparseTensorMiniBatch[Float](Array(
             Tensor.sparse(Array(5006), 1),
