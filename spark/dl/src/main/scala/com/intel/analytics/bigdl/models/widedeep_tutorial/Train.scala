@@ -17,7 +17,7 @@
 package com.intel.analytics.bigdl.models.widedeep_tutorial
 
 import com.intel.analytics.bigdl.dataset.SparseTensorMiniBatch
-import com.intel.analytics.bigdl.nn.{ClassNLLCriterion, CrossEntropyCriterion, Module}
+import com.intel.analytics.bigdl.nn.{ClassNLLCriterion, Module}
 import com.intel.analytics.bigdl.numeric.NumericFloat
 import com.intel.analytics.bigdl.optim._
 import com.intel.analytics.bigdl.tensor.Tensor
@@ -90,8 +90,7 @@ object Train {
         .setTrainSummary(trainSummary)
         .setValidationSummary(validationSummary)
         .setValidation(Trigger.everyEpoch,
-          validateSet, Array(new Top1Accuracy[Float],
-            new Loss[Float](ClassNLLCriterion[Float]())),
+          validateSet, Array(new Top1Accuracy[Float], new Loss[Float]()),
           batchSize = batchSize,
           miniBatch = new SparseTensorMiniBatch[Float](Array(
             Tensor.sparse(Array(5006), 1),

@@ -114,22 +114,16 @@ class WideDeepSpec extends FlatSpec with BeforeAndAfter with Matchers {
     val sparse_weight = sparseModel.getParameters()._2
     val dense_weight = model.getParameters()._2
 
-//    println(sparse_weight.size().mkString("x"))
-//    println(dense_weight.size().mkString("x"))
-//
-//    println(sparse_weight.narrow(1, 36649, 15))
-//    println(dense_weight.narrow(1, 36649, 15))
-
-    val SPS = sparse_weight.storage().array()
-    val DEN = dense_weight.storage().array()
-    var cnt = 0
-    for (i <- SPS.indices) {
-      if (SPS(i) != DEN(i)) {
-        cnt += 1
-        println(s"SPS(${i})(${SPS(i)}) != DEN(${i})(${DEN(i)})")
-      }
-    }
-    println(s"Total Non-EQUAL: ${cnt}")
+//    val SPS = sparse_weight.storage().array()
+//    val DEN = dense_weight.storage().array()
+//    var cnt = 0
+//    for (i <- SPS.indices) {
+//      if (SPS(i) != DEN(i)) {
+//        cnt += 1
+//        println(s"SPS(${i})(${SPS(i)}) != DEN(${i})(${DEN(i)})")
+//      }
+//    }
+//    println(s"Total Non-EQUAL: ${cnt}")
 
     sparseModel.getParameters()._2.equals(model.getParameters()._2) shouldEqual true
 
